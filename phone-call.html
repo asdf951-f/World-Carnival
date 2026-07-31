@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>给朋友打电话</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --star-gold: #FDCB6E;
+  --star-dark: #0B0C10;
+  --star-purple: #6C5CE7;
+  --star-blue: #45A29E;
+  --star-light: #C5C6C7;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Nunito', 'PingFang SC', sans-serif;
+  background: radial-gradient(ellipse at top, #1a1a3e 0%, #0B0C10 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: white;
+}
+
+.stars-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 2s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+}
+.back-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.back-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+.header-title {
+  font-size: 18px;
+  font-weight: 800;
+  text-shadow: 0 0 20px rgba(253,203,110,0.5);
+}
+
+.main-content {
+  padding: calc(env(safe-area-inset-top, 0px) + 70px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  max-width: 420px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.call-status {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #4ECDC4;
+  display: inline-block;
+  animation: pulseGreen 1.5s ease-in-out infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes pulseGreen {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+.status-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+}
+
+.animal-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.animal-avatar {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.15), rgba(69,162,158,0.2) 60%, rgba(69,162,158,0.08));
+  border: 4px solid rgba(253,203,110,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  box-shadow: 0 0 30px rgba(253,203,110,0.3), 0 8px 32px rgba(0,0,0,0.4);
+  margin-bottom: 16px;
+  transition: transform 0.3s;
+}
+.animal-avatar.wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+.animal-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 15px rgba(253,203,110,0.4);
+  margin-bottom: 8px;
+}
+.animal-subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+}
+
+.chat-bubble-container {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.bubble {
+  max-width: 85%;
+  padding: 16px 20px;
+  border-radius: 24px;
+  position: relative;
+  animation: bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes bubblePop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.bubble.animal {
+  background: linear-gradient(135deg, rgba(253,203,110,0.2) 0%, rgba(253,203,110,0.1) 100%);
+  border: 2px solid rgba(253,203,110,0.4);
+  color: #fff;
+  margin-left: auto;
+  margin-right: 0;
+}
+.bubble.animal::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: rgba(253,203,110,0.2);
+  border-right: 2px solid rgba(253,203,110,0.4);
+  border-bottom: 2px solid rgba(253,203,110,0.4);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.bubble.player {
+  background: linear-gradient(135deg, rgba(78,205,196,0.2) 0%, rgba(78,205,196,0.1) 100%);
+  border: 2px solid rgba(78,205,196,0.4);
+  color: #fff;
+  margin-left: 0;
+  margin-right: auto;
+}
+.bubble.player::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: rgba(78,205,196,0.2);
+  border-left: 2px solid rgba(78,205,196,0.4);
+  border-bottom: 2px solid rgba(78,205,196,0.4);
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.bubble-text {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.answer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.answer-btn {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.answer-btn:active {
+  transform: scale(0.98);
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(78,205,196,0.5);
+}
+.answer-btn:hover {
+  border-color: rgba(78,205,196,0.4);
+}
+.answer-btn .emoji {
+  font-size: 20px;
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 12px 20px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  max-width: fit-content;
+  margin-left: auto;
+}
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(253,203,110,0.6);
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* === 拨号界面 === */
+.dial-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+.dial-screen.hidden { display: none !important; }
+.call-screen.hidden { display: none !important; }
+.hang-up-btn.hidden { display: none !important; }
+
+.dial-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px rgba(253,203,110,0.5);
+}
+.dial-subtitle {
+  font-size: 15px;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  margin-bottom: 48px;
+}
+.dial-phone-icon {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(78,205,196,0.3), rgba(78,205,196,0.15) 60%, rgba(78,205,196,0.05));
+  border: 4px solid rgba(78,205,196,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  box-shadow: 0 0 40px rgba(78,205,196,0.3), 0 8px 32px rgba(0,0,0,0.4);
+  margin-bottom: 40px;
+  animation: phonePulse 2s ease-in-out infinite;
+}
+@keyframes phonePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(78,205,196,0.3), 0 8px 32px rgba(0,0,0,0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(78,205,196,0.5), 0 8px 40px rgba(0,0,0,0.5); }
+}
+.dial-btn {
+  width: 200px;
+  height: 72px;
+  border-radius: 36px;
+  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+  border: none;
+  color: white;
+  font-size: 22px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 6px 30px rgba(78,205,196,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+  animation: btnGlow 2s ease-in-out infinite;
+}
+.dial-btn:active { transform: scale(0.95); }
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 6px 30px rgba(78,205,196,0.4); }
+  50% { box-shadow: 0 6px 40px rgba(78,205,196,0.6), 0 0 20px rgba(78,205,196,0.3); }
+}
+.dial-btn-icon { font-size: 28px; }
+.animal-friends-preview {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.friend-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+/* === 通话界面状态切换 === */
+.call-status.idle .status-dot {
+  background: rgba(255,255,255,0.3);
+  animation: none;
+}
+.call-status.idle .status-text {
+  color: rgba(255,255,255,0.4);
+}
+.call-status.calling .status-dot {
+  background: #FDCA6E;
+  animation: pulseYellow 1s ease-in-out infinite;
+}
+@keyframes pulseYellow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+.call-status.calling .status-text { color: #FDCA6E; }
+
+.hang-up-btn {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,107,107,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 50;
+}
+.hang-up-btn:active { transform: scale(0.9); }
+
+/* 语音设置 */
+.voice-settings-btn {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 70px);
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s;
+}
+.voice-settings-btn:active { transform: scale(0.9); }
+.voice-settings-btn.muted { opacity: 0.5; }
+
+.voice-settings-panel {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 114px);
+  right: 12px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 101;
+  min-width: 200px;
+  border: 1px solid rgba(255,255,255,0.15);
+  display: none;
+}
+.voice-settings-panel.show { display: block; animation: panelIn 0.2s ease-out; }
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.voice-settings-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.voice-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.voice-setting-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+.voice-toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  padding: 0;
+}
+.voice-toggle.on { background: #4ECDC4; }
+.voice-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.2s;
+}
+.voice-toggle.on::after { left: 22px; }
+    /* === 引导手势动画系统 === */
+    .gesture-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gesture-hand {
+      position: absolute;
+      font-size: 80px;
+      opacity: 0;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6)) drop-shadow(0 0 12px rgba(255,255,255,0.5));
+      pointer-events: none;
+      z-index: 9999;
+    }
+    @keyframes gestureTap {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1.8); }
+      15% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      40% { opacity: 1; transform: translate(-50%,-50%) scale(0.95); }
+      60% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      80% { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.3); }
+    }
+    .gesture-tap-anim { animation: gestureTap 1.8s ease-in-out infinite; }
+    @keyframes gestureRipple {
+      0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; }
+      100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+    }
+    .gesture-ripple {
+      position: absolute;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,200,60,0.9);
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .gesture-ripple-anim { animation: gestureRipple 1.8s ease-out infinite; }
+    /* === 小星星向导 === */
+    .star-guide-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9998;
+      pointer-events: none;
+      transition: transform 0.3s;
+    }
+    .star-guide-container.hidden {
+      opacity: 0;
+      transform: scale(0.5);
+      pointer-events: none;
+    }
+    .star-guide {
+      width: 60px; height: 60px;
+      background: radial-gradient(circle at 30% 30%, #FFF4B8, #FFD700);
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(255,215,0,0.6), 0 0 60px rgba(255,215,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      animation: starBounce 2s ease-in-out infinite;
+      position: relative;
+    }
+    .star-guide::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255,215,0,0.4);
+      animation: starRotate 8s linear infinite;
+    }
+    @keyframes starBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes starRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .star-guide-bubble {
+      position: absolute;
+      bottom: 70px;
+      right: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 14px 14px 4px 14px;
+      font-size: 14px;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      border: 1px solid rgba(255,215,0,0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      max-width: 220px;
+      white-space: normal;
+      line-height: 1.4;
+    }
+    .star-guide-bubble.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .star-guide-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      right: 20px;
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid rgba(0,0,0,0.85);
+    }
+  </style>
+</head>
+<body>
+  <div class="stars-bg" id="stars-bg"></div>
+  
+  <header class="header">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <h1 class="header-title">📞 给朋友打电话</h1>
+    <div class="call-status idle" id="call-status">
+      <span class="status-dot"></span>
+      <span class="status-text" id="status-text">准备通话</span>
+    </div>
+  </header>
+  
+  <main class="main-content">
+    <!-- 拨号界面 -->
+    <div class="dial-screen" id="dial-screen">
+      <div class="dial-phone-icon">📱</div>
+      <div class="dial-title">给动物朋友打电话</div>
+      <div class="dial-subtitle">打个电话，和小动物聊聊天吧！</div>
+      <button class="dial-btn" id="call-btn" onclick="makeCall()">
+        <span class="dial-btn-icon">📞</span>
+        <span>拨打电话</span>
+      </button>
+      <div class="animal-friends-preview">
+        <div class="friend-preview">🦜</div>
+        <div class="friend-preview">🦉</div>
+        <div class="friend-preview">🐸</div>
+        <div class="friend-preview">🐠</div>
+        <div class="friend-preview">🐙</div>
+        <div class="friend-preview">🐢</div>
+        <div class="friend-preview">🐒</div>
+      </div>
+    </div>
+    
+    <!-- 通话界面 -->
+    <div class="call-screen hidden" id="call-screen">
+      <div class="animal-area">
+        <div class="animal-avatar" id="animal-avatar">🦜</div>
+        <div class="animal-name" id="animal-name">小鹦鹉</div>
+        <div class="animal-subtitle" id="animal-subtitle">回声谷的好朋友</div>
+      </div>
+      
+      <div class="chat-bubble-container" id="chat-container">
+      </div>
+      
+      <div class="answer-buttons" id="answer-buttons">
+      </div>
+    </div>
+  </main>
+  
+  <button class="hang-up-btn hidden" id="hang-up-btn" onclick="hangUp()">📞</button>
+
+  <!-- 语音设置 -->
+  <button class="voice-settings-btn" id="voice-settings-btn" onclick="toggleVoiceSettings()">🔊</button>
+  <div class="voice-settings-panel" id="voice-settings-panel">
+    <div class="voice-settings-title">语音设置</div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">语音引导</span>
+      <button class="voice-toggle on" id="voice-toggle" onclick="toggleVoiceGuide()"></button>
+    </div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">手势指引</span>
+      <button id="gesture-toggle" class="voice-toggle on" aria-label="手势指引开关"></button>
+    </div>
+    <div class="voice-setting-row" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 12px;">
+      <span class="voice-setting-label">重置手势演示</span>
+      <button id="reset-gesture-btn" style="background: rgba(255,200,60,0.3); border: 1px solid rgba(255,200,60,0.5); color: #FFC048; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer;">重置</button>
+    </div>
+  </div>
+
+  <script>
+// ========== VoiceGuide 系统 ==========
+(function() {
+  const STORAGE_KEY = 'starlight_voice_guide';
+  const synth = window.speechSynthesis || null;
+
+  function isVoiceGuideEnabled() {
+    const v = localStorage.getItem(STORAGE_KEY);
+    return v !== 'false';
+  }
+
+  function setVoiceGuideEnabled(enabled) {
+    localStorage.setItem(STORAGE_KEY, enabled ? 'true' : 'false');
+    updateBtnIcon();
+    if (enabled) {
+      speakGuide('语音引导已开启');
+    }
+  }
+
+  function updateBtnIcon() {
+    const btn = document.getElementById('voice-settings-btn');
+    if (!btn) return;
+    if (isVoiceGuideEnabled()) {
+      btn.textContent = '🔊';
+      btn.classList.remove('muted');
+    } else {
+      btn.textContent = '🔇';
+      btn.classList.add('muted');
+    }
+  }
+
+  let currentUtterance = null;
+
+  function stopSpeak() {
+    if (synth && synth.speaking) {
+      synth.cancel();
+    }
+    currentUtterance = null;
+  }
+
+  function speakGuide(text, options) {
+    if (!isVoiceGuideEnabled()) return;
+    if (!synth) return;
+    if (!text || !text.trim()) return;
+
+    stopSpeak();
+
+    const opts = options || {};
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'zh-CN';
+    utter.rate = opts.rate || 0.9;
+    utter.pitch = opts.pitch || 1.3;
+    utter.volume = opts.volume || 1;
+
+    const voices = synth.getVoices();
+    const zhVoice = voices.find(function(v) {
+      return v.lang && v.lang.toLowerCase().indexOf('zh') === 0;
+    });
+    if (zhVoice) utter.voice = zhVoice;
+
+    currentUtterance = utter;
+    synth.speak(utter);
+  }
+
+  function speakEn(text, options) {
+    if (!isVoiceGuideEnabled()) return;
+    if (!synth) return;
+    if (!text || !text.trim()) return;
+
+    stopSpeak();
+
+    const opts = options || {};
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = opts.rate || 0.8;
+    utter.pitch = opts.pitch || 1.2;
+    utter.volume = opts.volume || 1;
+
+    currentUtterance = utter;
+    synth.speak(utter);
+  }
+
+  const GESTURE_KEY = 'starlight_gesture_enabled';
+
+  function isGestureGuideEnabled() {
+    const v = localStorage.getItem(GESTURE_KEY);
+    return v !== 'false';
+  }
+
+  function setGestureGuideEnabled(enabled) {
+    localStorage.setItem(GESTURE_KEY, enabled ? 'true' : 'false');
+    if (window.GestureGuide) {
+      window.GestureGuide.setEnabled(enabled);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('voice-settings-btn');
+    const panel = document.getElementById('voice-settings-panel');
+    const toggle = document.getElementById('voice-toggle');
+    const gestureToggle = document.getElementById('gesture-toggle');
+    const resetBtn = document.getElementById('reset-gesture-btn');
+
+    updateBtnIcon();
+    if (isVoiceGuideEnabled()) {
+      if (toggle) toggle.classList.add('on');
+    } else {
+      if (toggle) toggle.classList.remove('on');
+    }
+
+    if (isGestureGuideEnabled()) {
+      if (gestureToggle) gestureToggle.classList.add('on');
+    } else {
+      if (gestureToggle) gestureToggle.classList.remove('on');
+    }
+
+    if (btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (panel) panel.classList.toggle('show');
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      if (panel && !panel.contains(e.target) && e.target !== btn) {
+        panel.classList.remove('show');
+      }
+    });
+
+    if (toggle) {
+      toggle.addEventListener('click', function() {
+        const enabled = !isVoiceGuideEnabled();
+        setVoiceGuideEnabled(enabled);
+        if (enabled) {
+          toggle.classList.add('on');
+        } else {
+          toggle.classList.remove('on');
+        }
+      });
+    }
+
+    if (gestureToggle) {
+      gestureToggle.addEventListener('click', function() {
+        const enabled = !isGestureGuideEnabled();
+        setGestureGuideEnabled(enabled);
+        if (enabled) {
+          gestureToggle.classList.add('on');
+        } else {
+          gestureToggle.classList.remove('on');
+        }
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function() {
+        try {
+          localStorage.removeItem('starlight_gesture_seen');
+          alert('手势演示已重置！刷新页面即可重新看到引导动画。');
+        } catch(e) {}
+      });
+    }
+
+    if (synth) {
+      synth.getVoices();
+      window.addEventListener('voiceschanged', function() {
+        synth.getVoices();
+      });
+    }
+  });
+
+  window.VoiceGuide = {
+    speak: speakGuide,
+    speakEn: speakEn,
+    stop: stopSpeak,
+    isEnabled: isVoiceGuideEnabled
+  };
+})();
+
+// 全局语音设置函数
+function toggleVoiceSettings() {
+  const panel = document.getElementById('voice-settings-panel');
+  if (panel) panel.classList.toggle('show');
+}
+
+function toggleVoiceGuide() {
+  const toggle = document.getElementById('voice-toggle');
+  const btn = document.getElementById('voice-settings-btn');
+  const enabled = !(window.VoiceGuide && window.VoiceGuide.isEnabled && window.VoiceGuide.isEnabled());
+  localStorage.setItem('starlight_voice_guide', enabled ? 'true' : 'false');
+  if (toggle) toggle.classList.toggle('on', enabled);
+  if (btn) {
+    btn.textContent = enabled ? '🔊' : '🔇';
+    btn.classList.toggle('muted', !enabled);
+  }
+  if (enabled && window.VoiceGuide && window.VoiceGuide.speak) {
+    window.VoiceGuide.speak('语音引导已开启');
+  }
+}
+
+function toggleGestureGuide() {
+  const toggle = document.getElementById('gesture-toggle');
+  const enabled = localStorage.getItem('starlight_gesture_enabled') !== 'false';
+  const newEnabled = !enabled;
+  localStorage.setItem('starlight_gesture_enabled', newEnabled ? 'true' : 'false');
+  if (window.GestureGuide) {
+    window.GestureGuide.setEnabled(newEnabled);
+  }
+  if (toggle) {
+    if (newEnabled) {
+      toggle.classList.add('on');
+    } else {
+      toggle.classList.remove('on');
+    }
+  }
+}
+
+function resetGesture() {
+  try {
+    localStorage.removeItem('starlight_gesture_seen');
+    alert('手势演示已重置！刷新页面即可重新看到引导动画。');
+  } catch(e) {}
+}
+
+const ANIMALS = [
+  { id: 'parrot', name: '小鹦鹉', emoji: '🦜', subtitle: '回声谷的好朋友', color: '#FDCA6E' },
+  { id: 'owl', name: '猫头鹰', emoji: '🦉', subtitle: '夜晚的守护者', color: '#6C5CE7' },
+  { id: 'frog', name: '小青蛙', emoji: '🐸', subtitle: '池塘里的歌唱家', color: '#66BB6A' },
+  { id: 'clownfish', name: '小丑鱼', emoji: '🐠', subtitle: '大海里的彩虹', color: '#FF9F43' },
+  { id: 'octopus', name: '小章鱼', emoji: '🐙', subtitle: '深海的智慧家', color: '#A29BFE' },
+  { id: 'turtle', name: '小海龟', emoji: '🐢', subtitle: '慢吞吞的旅行者', color: '#45A29E' },
+  { id: 'monkey', name: '小猴子', emoji: '🐒', subtitle: '森林里的调皮鬼', color: '#FDCA6E' },
+];
+
+const TOPICS = [
+  {
+    question: '今天你吃了什么？',
+    answers: [
+      { text: '我吃了苹果！', emoji: '🍎', response: '苹果真好吃！' },
+      { text: '我吃了香蕉！', emoji: '🍌', response: '香蕉甜甜的！' },
+      { text: '我吃了葡萄！', emoji: '🍇', response: '葡萄圆圆的！' },
+      { text: '我吃了西瓜！', emoji: '🍉', response: '西瓜好解渴！' },
+    ]
+  },
+  {
+    question: '你最喜欢什么颜色？',
+    answers: [
+      { text: '我最喜欢红色！', emoji: '🔴', response: '红色很温暖！' },
+      { text: '我最喜欢蓝色！', emoji: '🔵', response: '蓝色像大海！' },
+      { text: '我最喜欢黄色！', emoji: '🟡', response: '黄色像太阳！' },
+      { text: '我最喜欢绿色！', emoji: '🟢', response: '绿色像草地！' },
+    ]
+  },
+  {
+    question: '今天天气怎么样？',
+    answers: [
+      { text: '今天是晴天！', emoji: '☀️', response: '晴天真舒服！' },
+      { text: '今天下雨了！', emoji: '🌧️', response: '雨天可以玩水！' },
+      { text: '今天刮风了！', emoji: '🌬️', response: '风吹起来好凉快！' },
+      { text: '今天下雪了！', emoji: '❄️', response: '雪白白的好漂亮！' },
+    ]
+  },
+  {
+    question: '你今天玩了什么？',
+    answers: [
+      { text: '我玩了积木！', emoji: '🧱', response: '积木可以搭城堡！' },
+      { text: '我玩了画画！', emoji: '🎨', response: '画画真有趣！' },
+      { text: '我玩了玩具车！', emoji: '🚗', response: '滴滴滴！开车啦！' },
+      { text: '我玩了过家家！', emoji: '🏠', response: '过家家真好玩！' },
+    ]
+  },
+  {
+    question: '你喜欢什么动物？',
+    answers: [
+      { text: '我喜欢小狗！', emoji: '🐕', response: '小狗很忠诚！' },
+      { text: '我喜欢小猫！', emoji: '🐱', response: '小猫很可爱！' },
+      { text: '我喜欢小鸟！', emoji: '🐦', response: '小鸟会唱歌！' },
+      { text: '我喜欢小鱼！', emoji: '🐟', response: '小鱼会游泳！' },
+    ]
+  },
+  {
+    question: '你想去哪里玩？',
+    answers: [
+      { text: '我想去公园！', emoji: '🏞️', response: '公园有好多花！' },
+      { text: '我想去海边！', emoji: '🌊', response: '海边可以捡贝壳！' },
+      { text: '我想去动物园！', emoji: '🦒', response: '动物园有好多动物！' },
+      { text: '我想去游乐园！', emoji: '🎡', response: '游乐园有过山车！' },
+    ]
+  },
+  {
+    question: '你今天开心吗？',
+    answers: [
+      { text: '我很开心！', emoji: '😄', response: '开心就好！' },
+      { text: '我一般般！', emoji: '😐', response: '那我们一起玩！' },
+      { text: '我有点难过！', emoji: '😢', response: '别难过，我陪你！' },
+      { text: '我超级开心！', emoji: '🤩', response: '太棒了！一起开心！' },
+    ]
+  },
+  {
+    question: '你喜欢什么水果？',
+    answers: [
+      { text: '我喜欢草莓！', emoji: '🍓', response: '草莓甜甜的！' },
+      { text: '我喜欢橙子！', emoji: '🍊', response: '橙子酸酸的！' },
+      { text: '我喜欢芒果！', emoji: '🥭', response: '芒果香香的！' },
+      { text: '我喜欢桃子！', emoji: '🍑', response: '桃子软软的！' },
+    ]
+  },
+  {
+    question: '你喜欢什么玩具？',
+    answers: [
+      { text: '我喜欢布娃娃！', emoji: '🧸', response: '布娃娃很可爱！' },
+      { text: '我喜欢恐龙！', emoji: '🦕', response: '恐龙好大呀！' },
+      { text: '我喜欢拼图！', emoji: '🧩', response: '拼图很有趣！' },
+      { text: '我喜欢皮球！', emoji: '⚽', response: '皮球可以拍！' },
+    ]
+  },
+  {
+    question: '你早上吃了什么？',
+    answers: [
+      { text: '我吃了面包！', emoji: '🍞', response: '面包软软的！' },
+      { text: '我吃了牛奶！', emoji: '🥛', response: '牛奶有营养！' },
+      { text: '我吃了鸡蛋！', emoji: '🥚', response: '鸡蛋很健康！' },
+      { text: '我吃了粥！', emoji: '🥣', response: '粥暖暖的！' },
+    ]
+  },
+  {
+    question: '你喜欢听什么歌？',
+    answers: [
+      { text: '我喜欢儿歌！', emoji: '🎵', response: '儿歌真好听！' },
+      { text: '我喜欢童谣！', emoji: '🎶', response: '童谣朗朗上口！' },
+      { text: '我喜欢唱歌！', emoji: '🎤', response: '唱歌真开心！' },
+      { text: '我喜欢跳舞！', emoji: '💃', response: '跳舞真好玩！' },
+    ]
+  },
+  {
+    question: '你喜欢什么季节？',
+    answers: [
+      { text: '我喜欢春天！', emoji: '🌸', response: '春天有好多花！' },
+      { text: '我喜欢夏天！', emoji: '☀️', response: '夏天可以游泳！' },
+      { text: '我喜欢秋天！', emoji: '🍂', response: '秋天有落叶！' },
+      { text: '我喜欢冬天！', emoji: '⛄', response: '冬天可以堆雪人！' },
+    ]
+  },
+  {
+    question: '你喜欢做什么运动？',
+    answers: [
+      { text: '我喜欢跑步！', emoji: '🏃', response: '跑步身体好！' },
+      { text: '我喜欢跳绳！', emoji: '🪢', response: '跳绳很有趣！' },
+      { text: '我喜欢游泳！', emoji: '🏊', response: '游泳像小鱼！' },
+      { text: '我喜欢打球！', emoji: '🏀', response: '打球真好玩！' },
+    ]
+  },
+  {
+    question: '你最喜欢哪个朋友？',
+    answers: [
+      { text: '我最喜欢小鹦鹉！', emoji: '🦜', response: '小鹦鹉会说话！' },
+      { text: '我最喜欢小青蛙！', emoji: '🐸', response: '小青蛙会唱歌！' },
+      { text: '我最喜欢小海龟！', emoji: '🐢', response: '小海龟很可爱！' },
+      { text: '我最喜欢小猴子！', emoji: '🐒', response: '小猴子很调皮！' },
+    ]
+  },
+  {
+    question: '你今天学到了什么？',
+    answers: [
+      { text: '我学到了新单词！', emoji: '📚', response: '学习真有趣！' },
+      { text: '我学到了画画！', emoji: '🎨', response: '画画真好看！' },
+      { text: '我学到了唱歌！', emoji: '🎤', response: '唱歌真好听！' },
+      { text: '我学到了数字！', emoji: '🔢', response: '数字真神奇！' },
+    ]
+  },
+];
+
+const FOLLOWUP_RESPONSES = [
+  '哈哈，真有趣！',
+  '我也觉得！',
+  '太棒了！',
+  '真好玩！',
+  '我知道了！',
+  '哇，好棒！',
+  '真可爱！',
+  '我喜欢！',
+  '好厉害！',
+  '真开心！',
+  '真有意思！',
+  '我也喜欢！',
+  '真不错！',
+  '太棒啦！',
+  '好有趣！',
+  '我明白了！',
+  '真可爱呀！',
+  '好开心！',
+  '真好玩呀！',
+  '太棒了！',
+];
+
+let currentAnimal = null;
+let currentTopic = null;
+let isAnimating = false;
+let callStarted = false;
+let conversationCount = 0;
+let guidePlayedThisRound = false;
+let lastTopicIndex = -1;
+
+function initStars() {
+  const container = document.getElementById('stars-bg');
+  for (let i = 0; i < 50; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.width = Math.random() * 3 + 1 + 'px';
+    star.style.height = star.style.width;
+    star.style.animationDelay = Math.random() * 2 + 's';
+    star.style.animationDuration = (Math.random() * 2 + 1) + 's';
+    container.appendChild(star);
+  }
+}
+
+function speak(text) {
+  if (window.VoiceGuide) {
+    window.VoiceGuide.speak(text);
+  } else {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    speechSynthesis.speak(utterance);
+  }
+}
+
+function makeCall() {
+  if (callStarted) return;
+  callStarted = true;
+  
+  var callBtn = document.getElementById('call-btn');
+  if (callBtn) {
+    callBtn.style.pointerEvents = 'none';
+    callBtn.innerHTML = '<span class="dial-btn-icon">📞</span><span>正在接通...</span>';
+    callBtn.style.opacity = '0.7';
+  }
+  
+  var callStatus = document.getElementById('call-status');
+  var statusText = document.getElementById('status-text');
+  if (callStatus) callStatus.className = 'call-status calling';
+  if (statusText) statusText.textContent = '正在呼叫...';
+  
+  speak('嘟——嘟——嘟——正在给小动物打电话！');
+  
+  setTimeout(function() {
+    var dialScreen = document.getElementById('dial-screen');
+    var callScreen = document.getElementById('call-screen');
+    var hangUpBtn = document.getElementById('hang-up-btn');
+    
+    if (dialScreen) dialScreen.classList.add('hidden');
+    if (callScreen) callScreen.classList.remove('hidden');
+    if (hangUpBtn) hangUpBtn.classList.remove('hidden');
+    
+    if (callStatus) callStatus.className = 'call-status';
+    if (statusText) statusText.textContent = '通话中';
+    
+    startCall();
+  }, 2000);
+}
+
+function startCall() {
+  currentAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+  renderAnimal();
+  setTimeout(() => {
+    speak('喂，你好！我是' + currentAnimal.name + '！');
+    setTimeout(() => {
+      askQuestion();
+    }, 800);
+  }, 500);
+}
+
+function renderAnimal() {
+  const avatar = document.getElementById('animal-avatar');
+  const name = document.getElementById('animal-name');
+  const subtitle = document.getElementById('animal-subtitle');
+  
+  avatar.textContent = currentAnimal.emoji;
+  avatar.style.borderColor = currentAnimal.color;
+  avatar.style.boxShadow = `0 0 30px ${currentAnimal.color}40, 0 8px 32px rgba(0,0,0,0.4)`;
+  name.textContent = currentAnimal.name;
+  subtitle.textContent = currentAnimal.subtitle;
+}
+
+function askQuestion() {
+  let topicIndex = Math.floor(Math.random() * TOPICS.length);
+  if (TOPICS.length > 1 && topicIndex === lastTopicIndex) {
+    topicIndex = (topicIndex + 1) % TOPICS.length;
+  }
+  lastTopicIndex = topicIndex;
+  currentTopic = TOPICS[topicIndex];
+  
+  addBubble('animal', currentTopic.question);
+  speak(currentTopic.question);
+  
+  guidePlayedThisRound = false;
+  
+  if (conversationCount < 2) {
+    setTimeout(() => {
+      speak('点一点回答小动物的问题吧！');
+      guidePlayedThisRound = true;
+    }, 500);
+  }
+  
+  renderAnswers();
+}
+
+function addBubble(type, text) {
+  const container = document.getElementById('chat-container');
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${type}`;
+  bubble.innerHTML = `<div class="bubble-text">${text}</div>`;
+  container.appendChild(bubble);
+  
+  container.scrollTop = container.scrollHeight;
+  
+  const avatar = document.getElementById('animal-avatar');
+  if (type === 'animal') {
+    avatar.classList.remove('wiggle');
+    void avatar.offsetWidth;
+    avatar.classList.add('wiggle');
+  }
+}
+
+function renderAnswers() {
+  const buttonsContainer = document.getElementById('answer-buttons');
+  buttonsContainer.innerHTML = '';
+  
+  currentTopic.answers.forEach((answer, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `<span class="emoji">${answer.emoji}</span><span>${answer.text}</span>`;
+    btn.onclick = () => handleAnswer(answer);
+    btn.style.animationDelay = `${index * 0.1}s`;
+    buttonsContainer.appendChild(btn);
+  });
+}
+
+function handleAnswer(answer) {
+  if (isAnimating) return;
+  isAnimating = true;
+  
+  conversationCount++;
+  
+  const buttonsContainer = document.getElementById('answer-buttons');
+  buttonsContainer.innerHTML = '';
+  
+  addBubble('player', answer.text);
+  speak(answer.text);
+  
+  setTimeout(() => {
+    addBubble('animal', answer.response);
+    speak(answer.response);
+    
+    setTimeout(() => {
+      const followup = FOLLOWUP_RESPONSES[Math.floor(Math.random() * FOLLOWUP_RESPONSES.length)];
+      addBubble('animal', followup);
+      speak(followup);
+      
+      setTimeout(() => {
+        askQuestion();
+        isAnimating = false;
+      }, 1500);
+    }, 1500);
+  }, 1000);
+}
+
+function goBack() {
+  window.location.href = 'world-map-v2.html';
+}
+
+function hangUp() {
+  document.body.style.transition = 'opacity 0.3s';
+  document.body.style.opacity = '0';
+  setTimeout(() => {
+    window.location.href = 'world-map-v2.html';
+  }, 300);
+}
+
+window.addEventListener('load', () => {
+  initStars();
+  setTimeout(function() {
+    if (window.VoiceGuide && window.VoiceGuide.speak) {
+      window.VoiceGuide.speak('欢迎来到电话亭！点击按钮，给动物朋友打电话吧！');
+    }
+  }, 800);
+});
+  </script>
+
+<script>
+// 引导手势动画系统
+window.GestureGuide = {
+  STORAGE_KEY: 'starlight_gesture_seen',
+  GESTURE_ENABLE_KEY: 'starlight_gesture_enabled',
+
+  _enabled: true,
+
+  isEnabled: function() {
+    var v = localStorage.getItem(this.GESTURE_ENABLE_KEY);
+    return v !== 'false';
+  },
+
+  setEnabled: function(enabled) {
+    this._enabled = enabled;
+    localStorage.setItem(this.GESTURE_ENABLE_KEY, enabled ? 'true' : 'false');
+  },
+
+  hasSeen: function(id) {
+    try {
+      var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+      return seen[id] === true;
+    } catch(e) { return false; }
+  },
+  markSeen: function(id) {
+    try {
+      var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+      seen[id] = true;
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(seen));
+    } catch(e) {}
+  },
+  remove: function(overlay) {
+    if (overlay && overlay.parentNode) {
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.3s';
+      setTimeout(function() {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }, 300);
+    }
+  },
+  showTap: function(targetEl, options) {
+    if (!this.isEnabled()) return null;
+
+    var opts = options || {};
+    var id = opts.id || 'tap_' + Date.now();
+    var once = opts.once !== false;
+    var duration = opts.duration || 3000;
+    if (once && this.hasSeen(id)) return null;
+    var rect = targetEl.getBoundingClientRect();
+    var overlay = document.createElement('div');
+    overlay.className = 'gesture-overlay';
+    var hand = document.createElement('div');
+    hand.className = 'gesture-hand gesture-tap-anim';
+    hand.textContent = '👆';
+    hand.style.left = (rect.left + rect.width / 2) + 'px';
+    hand.style.top = (rect.top + rect.height / 2) + 'px';
+    hand.style.fontSize = opts.size || '80px';
+    overlay.appendChild(hand);
+    var ripple = document.createElement('div');
+    ripple.className = 'gesture-ripple gesture-ripple-anim';
+    ripple.style.left = (rect.left + rect.width / 2) + 'px';
+    ripple.style.top = (rect.top + rect.height / 2) + 'px';
+    overlay.appendChild(ripple);
+    document.body.appendChild(overlay);
+    var self = this;
+    var timer = setTimeout(function() {
+      self.remove(overlay);
+      if (once) self.markSeen(id);
+    }, duration);
+    overlay._timer = timer;
+    return overlay;
+  }
+};
+</script>
+
+<script>
+// 小星星向导
+window.StarGuide = {
+  container: null,
+  star: null,
+  bubble: null,
+  steps: [],
+  currentStep: 0,
+  idleTimer: null,
+  init: function(steps) {
+    this.steps = steps || [];
+    this.currentStep = 0;
+    this.createDOM();
+    this.startIdleWatch();
+  },
+  createDOM: function() {
+    if (this.container) return;
+    this.container = document.createElement('div');
+    this.container.className = 'star-guide-container hidden';
+    this.container.id = 'star-guide';
+    this.star = document.createElement('div');
+    this.star.className = 'star-guide';
+    this.star.textContent = '⭐';
+    this.bubble = document.createElement('div');
+    this.bubble.className = 'star-guide-bubble';
+    this.container.appendChild(this.bubble);
+    this.container.appendChild(this.star);
+    document.body.appendChild(this.container);
+  },
+  show: function(text, targetSelector) {
+    if (!this.container) this.createDOM();
+    this.container.classList.remove('hidden');
+    this.bubble.textContent = text;
+    this.bubble.classList.add('show');
+    if (targetSelector) {
+      var target = document.querySelector(targetSelector);
+      if (target) {
+        var rect = target.getBoundingClientRect();
+        this.container.style.position = 'fixed';
+        this.container.style.bottom = 'auto';
+        this.container.style.right = 'auto';
+        this.container.style.left = (rect.left + rect.width/2 - 30) + 'px';
+        this.container.style.top = (rect.top + rect.height + 12) + 'px';
+      }
+    } else {
+      this.container.style.position = 'fixed';
+      this.container.style.bottom = '24px';
+      this.container.style.right = '24px';
+      this.container.style.left = 'auto';
+      this.container.style.top = 'auto';
+    }
+    clearTimeout(this._hideTimer);
+    this._hideTimer = setTimeout(() => { this.hide(); }, 5000);
+  },
+  hide: function() {
+    if (!this.container) return;
+    this.bubble.classList.remove('show');
+    this.container.classList.add('hidden');
+  },
+  startIdleWatch: function() {
+    var self = this;
+    var lastActivity = Date.now();
+    function onActivity() { lastActivity = Date.now(); }
+    document.addEventListener('click', onActivity);
+    document.addEventListener('touchstart', onActivity);
+    document.addEventListener('pointerdown', onActivity);
+    function checkIdle() {
+      if (Date.now() - lastActivity > 3000 && self.currentStep < self.steps.length) {
+        var step = self.steps[self.currentStep];
+        if (!step.condition || step.condition()) {
+          self.show(step.text, step.target);
+          if (step.speak && window.VoiceGuide) window.VoiceGuide.speak(step.speak);
+        }
+      }
+    }
+    self.idleTimer = setInterval(checkIdle, 1000);
+  },
+  nextStep: function() {
+    this.currentStep++;
+    this.hide();
+  }
+};
+
+// 页面专属StarGuide配置
+(function() {
+  function initStarGuide() {
+    if (window.StarGuide) {
+      window.StarGuide.init([
+        { 
+          target: '#call-btn', 
+          condition: function() { return !document.getElementById('call-btn').classList.contains('hidden') && !callStarted; },
+          text: '点击按钮，给动物朋友打电话吧！'
+        },
+        {
+          target: '.answer-btn',
+          condition: function() { 
+            var btns = document.querySelectorAll('.answer-btn');
+            return btns.length > 0 && callStarted && !document.getElementById('success-overlay') && conversationCount < 2 && !guidePlayedThisRound;
+          },
+          text: '点一点回答小动物的问题吧！',
+          speak: '点一点回答小动物的问题吧！'
+        }
+      ]);
+      
+      var callBtn = document.getElementById('call-btn');
+      if (callBtn) {
+        callBtn.addEventListener('click', function() {
+          window.StarGuide.nextStep();
+        });
+      }
+    } else {
+      setTimeout(initStarGuide, 300);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(initStarGuide, 500); });
+  } else {
+    setTimeout(initStarGuide, 500);
+  }
+})();
+
+// 页面专属手势引导
+(function() {
+  function waitAndShow() {
+    if (window.GestureGuide) {
+      var btn = document.getElementById('call-btn');
+      if (btn && !callStarted) {
+        setTimeout(function() {
+          localStorage.removeItem('starlight_gesture_seen');
+          GestureGuide.showTap(btn, { id: 'phone_call_btn_v2', duration: 6000, once: false });
+        }, 1500);
+      }
+    } else {
+      setTimeout(waitAndShow, 200);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(waitAndShow, 500); });
+  } else {
+    setTimeout(waitAndShow, 500);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>星光嘉年华 - 中章</title>
+    <style id="theme-vars">
+:root {
+  --brand-primary: #6C5CE7;
+  --brand-primary-light: #A29BFE;
+  --brand-primary-lighter: #DCD6FF;
+  --brand-primary-dark: #1A0B2E;
+  --brand-deep-night: #0A0520;
+  --brand-star-gold: #FFD700;
+  --brand-star-glow: #FFF4B8;
+  --brand-gem-cyan: #4ECDC4;
+  --brand-gem-green: #66BB6A;
+  --brand-gem-purple: #AB47BC;
+  --brand-curtain-red: #4A0E0E;
+  --brand-curtain-gold: #C9A96E;
+  --brand-font-display: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --brand-font-body: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+    
+    /* === 语音引导设置面板 === */
+    .voice-settings-btn {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 56px);
+      right: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s;
+    }
+    .voice-settings-btn:active { transform: scale(0.9); }
+    .voice-settings-btn.muted { opacity: 0.5; }
+    
+    .voice-settings-panel {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 100px);
+      right: 12px;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 16px;
+      z-index: 101;
+      min-width: 200px;
+      border: 1px solid rgba(255,255,255,0.15);
+      display: none;
+      animation: panelIn 0.2s ease-out;
+    }
+    .voice-settings-panel.show { display: block; }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .voice-settings-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .voice-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+    .voice-setting-label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+    }
+    .voice-toggle {
+      width: 44px;
+      height: 24px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      padding: 0;
+    }
+    .voice-toggle.on { background: #4ECDC4; }
+    .voice-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.2s;
+    }
+    .voice-toggle.on::after { left: 22px; }
+
+  
+    /* === 引导手势动画系统 === */
+    .gesture-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gesture-hand {
+      position: absolute;
+      font-size: 80px;
+      opacity: 0;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6)) drop-shadow(0 0 12px rgba(255,255,255,0.5));
+      pointer-events: none;
+      z-index: 9999;
+    }
+    /* 点击手势 - 在目标位置脉冲 */
+    @keyframes gestureTap {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1.8); }
+      15% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      40% { opacity: 1; transform: translate(-50%,-50%) scale(0.95); }
+      60% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      80% { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.3); }
+    }
+    .gesture-tap-anim {
+      animation: gestureTap 1.8s ease-in-out infinite;
+    }
+    /* 拖拽手势 - 从A拖到B */
+    @keyframes gestureDragX {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1); left: var(--drag-from); }
+      10% { opacity: 1; transform: translate(-50%,-50%) scale(1); left: var(--drag-from); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(1); left: var(--drag-to); }
+      70% { opacity: 1; transform: translate(-50%,-50%) scale(0.9); left: var(--drag-to); }
+      80% { opacity: 0.8; transform: translate(-50%,-50%) scale(1); left: var(--drag-to); }
+      90% { opacity: 0; transform: translate(-50%,-50%) scale(1); left: var(--drag-to); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1); left: var(--drag-from); }
+    }
+    /* 摩擦手势 - 两只手指来回搓 */
+    @keyframes gestureRubLeft {
+      0%, 100% { transform: translateX(-22px); }
+      50% { transform: translateX(22px); }
+    }
+    @keyframes gestureRubRight {
+      0%, 100% { transform: translateX(22px); }
+      50% { transform: translateX(-22px); }
+    }
+    .gesture-rub-left {
+      animation: gestureRubLeft 0.6s ease-in-out infinite;
+    }
+    .gesture-rub-right {
+      animation: gestureRubRight 0.6s ease-in-out infinite;
+    }
+    /* 按住手势 - 手指按下不动 */
+    @keyframes gesturePress {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1.5); }
+      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(0.9); }
+      80% { opacity: 0.9; transform: translate(-50%,-50%) scale(0.95); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1); }
+    }
+    .gesture-press-anim {
+      animation: gesturePress 2s ease-in-out infinite;
+    }
+    /* 点击涟漪效果 */
+    @keyframes gestureRipple {
+      0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; }
+      100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+    }
+    .gesture-ripple {
+      position: absolute;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,200,60,0.9);
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .gesture-ripple-anim {
+      animation: gestureRipple 1.8s ease-out infinite;
+    }
+    /* 滑动方向箭头 */
+    @keyframes gestureSlideUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      20% { opacity: 1; }
+      80% { opacity: 1; transform: translateY(-40px); }
+      100% { opacity: 0; transform: translateY(-60px); }
+    }
+    @keyframes gestureSlideLeft {
+      0% { opacity: 0; transform: translateX(20px); }
+      20% { opacity: 1; }
+      80% { opacity: 1; transform: translateX(-40px); }
+      100% { opacity: 0; transform: translateX(-60px); }
+    }
+      80% { opacity: 0.8; transform: translateX(-40px); }
+      100% { opacity: 0; transform: translateX(-60px); }
+    }
+
+  
+    /* === 小星星向导 === */
+    .star-guide-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9998;
+      pointer-events: none;
+      transition: transform 0.3s;
+    }
+    .star-guide-container.hidden {
+      opacity: 0;
+      transform: scale(0.5);
+      pointer-events: none;
+    }
+    .star-guide {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      cursor: pointer;
+      filter: drop-shadow(0 4px 12px rgba(242,201,76,0.5));
+      animation: starPulse 2s ease-in-out infinite;
+      pointer-events: auto;
+      transition: transform 0.2s;
+    }
+    .star-guide:hover {
+      transform: scale(1.15);
+    }
+    .star-guide:active {
+      transform: scale(0.95);
+    }
+    @keyframes starPulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(242,201,76,0.5)); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 6px 20px rgba(242,201,76,0.7)); }
+    }
+    .star-guide-balloon {
+      position: absolute;
+      bottom: 50px;
+      right: 0;
+      background: rgba(255,255,255,0.95);
+      color: #333;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      white-space: nowrap;
+      max-width: 200px;
+      opacity: 0;
+      transform: translateY(10px) scale(0.9);
+      transition: all 0.3s ease-out;
+      pointer-events: none;
+    }
+    .star-guide-balloon.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .star-guide-balloon::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      right: 14px;
+      width: 16px;
+      height: 16px;
+      background: rgba(255,255,255,0.95);
+      transform: rotate(45deg);
+    }
+    /* 飞行路径动画 */
+    .star-guide-flying {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      font-size: 44px;
+      filter: drop-shadow(0 6px 20px rgba(242,201,76,0.7));
+    }
+    @keyframes starFly {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    /* 目标高亮光环 */
+    .star-guide-target-glow {
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid #F2C94C;
+      animation: targetGlow 1.5s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 9997;
+    }
+    @keyframes targetGlow {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+
+  </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+      .no-select { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+      html, body { overscroll-behavior: none; touch-action: manipulation; }
+    </style>
+</head>
+<body class="m-0 p-0 overflow-hidden w-screen h-screen no-select" style="background: #0A0520; font-family: var(--brand-font-body); -webkit-tap-highlight-color: transparent;">
+
+  <!-- ============== MAIN SCENE ============== -->
+  <main id="main-scene" class="relative w-full h-screen overflow-hidden" style="background: radial-gradient(ellipse at center, #1A0B2E 0%, #0A0520 70%);">
+
+    <!-- Base starfield background -->
+    <div id="starfield" class="absolute inset-0 pointer-events-none" style="opacity: 0.3; transition: opacity 2s;"></div>
+
+    <!-- ========== ACT 1: DARKNESS FALLS ========== -->
+    <!-- Scene elements (worlds silhouettes) that will dim -->
+    <div id="scene-worlds" class="absolute inset-0 pointer-events-none" style="opacity: 0.6; transition: opacity 2s, filter 2s;">
+      <!-- Echo Valley (green hills) silhouette -->
+      <div style="position: absolute; left: -5%; bottom: 0; width: 40%; height: 45%;">
+        <svg viewBox="0 0 200 200" preserveAspectRatio="none" style="width:100%;height:100%;">
+          <path d="M0,200 L0,120 Q50,60 100,90 Q150,40 200,80 L200,200 Z" fill="rgba(102,187,106,0.3)"/>
+          <path d="M0,200 L0,150 Q40,100 90,130 Q140,90 200,120 L200,200 Z" fill="rgba(76,175,80,0.25)"/>
+        </svg>
+      </div>
+      <!-- Bubble Bay (ocean/waves) silhouette -->
+      <div style="position: absolute; right: -5%; bottom: 0; width: 45%; height: 38%;">
+        <svg viewBox="0 0 200 200" preserveAspectRatio="none" style="width:100%;height:100%;">
+          <path d="M0,200 L0,100 Q30,80 60,95 Q100,70 140,90 Q170,75 200,95 L200,200 Z" fill="rgba(78,205,196,0.3)"/>
+          <path d="M0,200 L0,130 Q50,115 100,125 Q150,110 200,130 L200,200 Z" fill="rgba(0,131,143,0.35)"/>
+        </svg>
+      </div>
+      <!-- Shadow Jungle (purple trees) silhouette -->
+      <div style="position: absolute; left: 30%; bottom: 0; width: 50%; height: 40%;">
+        <svg viewBox="0 0 200 200" preserveAspectRatio="none" style="width:100%;height:100%;">
+          <path d="M20,200 L40,100 Q60,50 80,80 Q100,30 120,70 Q140,40 160,90 L180,200 Z" fill="rgba(171,71,188,0.25)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Three gems (center of Act 1) -->
+    <div id="gems-container" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="flex items-center gap-10" id="gems-row">
+        <!-- Gem 1: Echo Valley (green) -->
+        <div id="gem-1" class="gem-item" style="opacity: 0; transform: scale(0.3); transition: all 0.8s cubic-bezier(0.34,1.56,0.64,1);">
+          <div style="position: relative; width: 56px; height: 72px;">
+            <svg viewBox="0 0 56 72" style="width:100%;height:100%; filter: drop-shadow(0 0 20px rgba(102,187,106,0.8)) drop-shadow(0 0 40px rgba(102,187,106,0.4));">
+              <defs>
+                <radialGradient id="gemGrad1" cx="35%" cy="30%">
+                  <stop offset="0%" stop-color="#A5D6A7"/>
+                  <stop offset="50%" stop-color="#66BB6A"/>
+                  <stop offset="100%" stop-color="#2E7D32"/>
+                </radialGradient>
+              </defs>
+              <polygon points="28,4 52,24 44,68 12,68 4,24" fill="url(#gemGrad1)" stroke="#A5D6A7" stroke-width="1.5"/>
+              <polygon points="28,4 40,24 28,40 16,24" fill="rgba(255,255,255,0.35)"/>
+              <polygon points="16,24 28,40 22,60 12,68 4,24" fill="rgba(0,0,0,0.15)"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Gem 2: Bubble Bay (cyan) -->
+        <div id="gem-2" class="gem-item" style="opacity: 0; transform: scale(0.3); transition: all 0.8s cubic-bezier(0.34,1.56,0.64,1);">
+          <div style="position: relative; width: 56px; height: 72px;">
+            <svg viewBox="0 0 56 72" style="width:100%;height:100%; filter: drop-shadow(0 0 20px rgba(78,205,196,0.8)) drop-shadow(0 0 40px rgba(78,205,196,0.4));">
+              <defs>
+                <radialGradient id="gemGrad2" cx="35%" cy="30%">
+                  <stop offset="0%" stop-color="#B2DFDB"/>
+                  <stop offset="50%" stop-color="#4ECDC4"/>
+                  <stop offset="100%" stop-color="#00695C"/>
+                </radialGradient>
+              </defs>
+              <polygon points="28,4 52,24 44,68 12,68 4,24" fill="url(#gemGrad2)" stroke="#B2DFDB" stroke-width="1.5"/>
+              <polygon points="28,4 40,24 28,40 16,24" fill="rgba(255,255,255,0.35)"/>
+              <polygon points="16,24 28,40 22,60 12,68 4,24" fill="rgba(0,0,0,0.15)"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Gem 3: Shadow Jungle (purple) -->
+        <div id="gem-3" class="gem-item" style="opacity: 0; transform: scale(0.3); transition: all 0.8s cubic-bezier(0.34,1.56,0.64,1);">
+          <div style="position: relative; width: 56px; height: 72px;">
+            <svg viewBox="0 0 56 72" style="width:100%;height:100%; filter: drop-shadow(0 0 20px rgba(171,71,188,0.8)) drop-shadow(0 0 40px rgba(171,71,188,0.4));">
+              <defs>
+                <radialGradient id="gemGrad3" cx="35%" cy="30%">
+                  <stop offset="0%" stop-color="#CE93D8"/>
+                  <stop offset="50%" stop-color="#AB47BC"/>
+                  <stop offset="100%" stop-color="#6A1B9A"/>
+                </radialGradient>
+              </defs>
+              <polygon points="28,4 52,24 44,68 12,68 4,24" fill="url(#gemGrad3)" stroke="#CE93D8" stroke-width="1.5"/>
+              <polygon points="28,4 40,24 28,40 16,24" fill="rgba(255,255,255,0.35)"/>
+              <polygon points="16,24 28,40 22,60 12,68 4,24" fill="rgba(0,0,0,0.15)"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vignette dark corner overlay (Act 1) -->
+    <div id="vignette" class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at center, transparent 20%, rgba(10,5,32,0.95) 80%); opacity: 0; transition: opacity 2.5s;"></div>
+
+    <!-- Light beams from gems (Act 2) -->
+    <svg id="light-beams" class="absolute inset-0 pointer-events-none" style="width:100%;height:100%; opacity: 0; transition: opacity 1s;">
+      <defs>
+        <linearGradient id="beamGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(102,187,106,0)"/>
+          <stop offset="40%" stop-color="rgba(102,187,106,0.8)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,1)"/>
+        </linearGradient>
+        <linearGradient id="beamGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(78,205,196,0)"/>
+          <stop offset="40%" stop-color="rgba(78,205,196,0.8)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,1)"/>
+        </linearGradient>
+        <linearGradient id="beamGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(171,71,188,0)"/>
+          <stop offset="40%" stop-color="rgba(171,71,188,0.8)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,1)"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Three beams converging to center -->
+      <polygon id="beam-1" points="0,0 0,0 0,0 0,0" fill="url(#beamGrad1)" filter="url(#glow)" opacity="0.9"/>
+      <polygon id="beam-2" points="0,0 0,0 0,0 0,0" fill="url(#beamGrad2)" filter="url(#glow)" opacity="0.9"/>
+      <polygon id="beam-3" points="0,0 0,0 0,0 0,0" fill="url(#beamGrad3)" filter="url(#glow)" opacity="0.9"/>
+    </svg>
+
+    <!-- Star vortex/swirl (Act 2 center) -->
+    <div id="vortex-container" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style="width: 200px; height: 200px; opacity: 0; transition: opacity 0.8s;">
+      <div id="vortex-spin" style="width:100%; height:100%; position: relative; animation: vortexSpin 8s linear infinite;">
+        <!-- Multiple orbiting stars in rings -->
+        <div id="ring-1" style="position: absolute; inset: 0; animation: vortexSpin 3s linear infinite reverse;">
+          <div class="vstar" style="left:50%; top:0; color:#FFD700;">✦</div>
+          <div class="vstar" style="left:50%; top:0; transform: rotate(120deg); color:#FFD700;">✦</div>
+          <div class="vstar" style="left:50%; top:0; transform: rotate(240deg); color:#FFD700;">✦</div>
+        </div>
+        <div id="ring-2" style="position: absolute; inset: 20px; animation: vortexSpin 4s linear infinite;">
+          <div class="vstar small" style="left:50%; top:0; color:#FFF4B8;">✧</div>
+          <div class="vstar small" style="left:50%; top:0; transform: rotate(90deg); color:#FFF4B8;">✧</div>
+          <div class="vstar small" style="left:50%; top:0; transform: rotate(180deg); color:#FFF4B8;">✧</div>
+          <div class="vstar small" style="left:50%; top:0; transform: rotate(270deg); color:#FFF4B8;">✧</div>
+        </div>
+        <div id="ring-3" style="position: absolute; inset: 40px; animation: vortexSpin 2s linear infinite reverse;">
+          <div class="vstar tiny" style="left:50%; top:0; color:#fff;">·</div>
+          <div class="vstar tiny" style="left:50%; top:0; transform: rotate(60deg); color:#fff;">·</div>
+          <div class="vstar tiny" style="left:50%; top:0; transform: rotate(120deg); color:#fff;">·</div>
+          <div class="vstar tiny" style="left:50%; top:0; transform: rotate(180deg); color:#fff;">·</div>
+          <div class="vstar tiny" style="left:50%; top:0; transform: rotate(240deg); color:#fff;">·</div>
+          <div class="vstar tiny" style="left:50%; top:0; transform: rotate(300deg); color:#fff;">·</div>
+        </div>
+        <!-- Core -->
+        <div id="vortex-core" style="position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, #fff 0%, #FFD700 50%, rgba(255,215,0,0) 100%); animation: corePulse 1.5s ease-in-out infinite;"></div>
+      </div>
+    </div>
+
+    <!-- Star path (rises from vortex to bottom/top) -->
+    <div id="star-path" class="absolute left-1/2 -translate-x-1/2 pointer-events-none" style="top: 50%; bottom: 0; width: 80px; opacity: 0; transition: opacity 0.8s;">
+      <svg viewBox="0 0 80 400" preserveAspectRatio="none" style="width:100%;height:100%;">
+        <defs>
+          <linearGradient id="pathGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+            <stop offset="30%" stop-color="rgba(255,215,0,0.9)"/>
+            <stop offset="100%" stop-color="rgba(255,215,0,0.3)"/>
+          </linearGradient>
+        </defs>
+        <path d="M40,0 Q30,100 45,200 Q35,300 40,400" stroke="url(#pathGrad)" stroke-width="30" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+        <!-- Stars along path -->
+        <g fill="#FFD700">
+          <circle cx="40" cy="50" r="3" class="path-star" style="animation-delay:0s"/>
+          <circle cx="35" cy="120" r="2.5" class="path-star" style="animation-delay:0.3s"/>
+          <circle cx="45" cy="180" r="3.5" class="path-star" style="animation-delay:0.6s"/>
+          <circle cx="38" cy="250" r="2" class="path-star" style="animation-delay:0.9s"/>
+          <circle cx="42" cy="320" r="3" class="path-star" style="animation-delay:1.2s"/>
+          <circle cx="40" cy="380" r="2.5" class="path-star" style="animation-delay:1.5s"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Long-press prompt (Act 2) -->
+    <div id="press-prompt" class="fixed z-30 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none"
+         style="bottom: 20%; opacity: 0; transform: translateX(-50%) scale(0.7); transition: all 0.6s;">
+      <div id="finger-icon" style="font-size: 48px; animation: fingerPress 1.2s ease-in-out infinite;">👆</div>
+      <div style="margin-top: 8px; padding: 8px 18px; background: rgba(26,11,46,0.8); border: 1.5px solid rgba(255,215,0,0.6); border-radius: 20px; color: #FFD700; font-size: 14px; font-weight: 700; text-align: center; white-space: nowrap; backdrop-filter: blur(8px);">
+        长按屏幕3秒，推开大门~
+      </div>
+      <!-- Long press progress ring -->
+      <div id="press-progress-wrap" style="position: relative; margin-top: 14px; width: 70px; height: 70px; opacity: 0; transition: opacity 0.3s;">
+        <svg viewBox="0 0 70 70" style="width:100%;height:100%; transform: rotate(-90deg);">
+          <circle cx="35" cy="35" r="30" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
+          <circle id="press-progress" cx="35" cy="35" r="30" fill="none" stroke="#FFD700" stroke-width="5" stroke-linecap="round"
+                  stroke-dasharray="188.5" stroke-dashoffset="188.5" style="filter: drop-shadow(0 0 8px rgba(255,215,0,0.8)); transition: stroke-dashoffset 0.1s linear;"/>
+        </svg>
+        <div id="press-count" style="position: absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#FFD700; font-size: 20px; font-weight: 900; font-family: var(--brand-font-display); text-shadow: 0 0 10px rgba(255,215,0,0.8);">3</div>
+      </div>
+    </div>
+
+    <!-- ========== ACT 3: CURTAINS OPEN ========== -->
+    <!-- Curtains (start off-screen; sweep in at Act 3 then open) -->
+    <div id="curtain-left" class="fixed top-0 bottom-0 left-0 z-40 pointer-events-none"
+         style="width: 52%; background: linear-gradient(90deg, #2A0808 0%, #4A0E0E 40%, #6B1414 80%, #8B1A1A 100%); transition: transform 1s cubic-bezier(0.4,0,0.2,1); transform: translateX(-105%); box-shadow: inset -20px 0 40px rgba(0,0,0,0.5);">
+      <!-- Gold trim -->
+      <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 18px; background: linear-gradient(90deg, #8B6914 0%, #C9A96E 50%, #FFE082 100%); box-shadow: 2px 0 8px rgba(0,0,0,0.3);"></div>
+      <!-- Vertical folds -->
+      <div style="position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(0,0,0,0.15) 0px, transparent 20px, rgba(0,0,0,0.1) 40px, transparent 60px);"></div>
+      <!-- Tassels -->
+      <div style="position: absolute; right: 10px; bottom: 10%; font-size: 24px;">🔔</div>
+    </div>
+    <div id="curtain-right" class="fixed top-0 bottom-0 right-0 z-40 pointer-events-none"
+         style="width: 52%; background: linear-gradient(270deg, #2A0808 0%, #4A0E0E 40%, #6B1414 80%, #8B1A1A 100%); transition: transform 1s cubic-bezier(0.4,0,0.2,1); transform: translateX(105%); box-shadow: inset 20px 0 40px rgba(0,0,0,0.5);">
+      <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 18px; background: linear-gradient(270deg, #8B6914 0%, #C9A96E 50%, #FFE082 100%); box-shadow: -2px 0 8px rgba(0,0,0,0.3);"></div>
+      <div style="position: absolute; inset: 0; background: repeating-linear-gradient(270deg, rgba(0,0,0,0.15) 0px, transparent 20px, rgba(0,0,0,0.1) 40px, transparent 60px);"></div>
+      <div style="position: absolute; left: 10px; bottom: 10%; font-size: 24px;">🔔</div>
+    </div>
+    <!-- Top curtain bar (gold) -->
+    <div id="curtain-top" class="fixed top-0 left-0 right-0 z-41 pointer-events-none"
+         style="height: 24px; background: linear-gradient(180deg, #FFE082 0%, #C9A96E 50%, #8B6914 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.4s;"></div>
+
+    <!-- Finale preview visible through curtains as they open -->
+    <div id="finale-preview" class="fixed inset-0 z-30 pointer-events-none"
+         style="background: radial-gradient(ellipse at center, #2D1B5E 0%, #1A0B2E 60%, #0A0520 100%); opacity: 0; transition: opacity 1s 1s;">
+      <!-- Fireworks sparkles visible through gap -->
+      <div id="preview-sparkles" style="position:absolute;inset:0;opacity:0;transition:opacity:0.8s 1.5s;"></div>
+    </div>
+
+    <!-- ========== HINT / TITLE TEXT ========== -->
+    <div id="chapter-title" class="fixed z-20 left-1/2 -translate-x-1/2 text-center pointer-events-none"
+         style="top: 12%; opacity: 0; transform: translateX(-50%) translateY(-20px); transition: all 1s;">
+      <h1 id="chapter-h1" style="font-family: var(--brand-font-display); font-size: 28px; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 30px rgba(255,215,0,0.6), 0 2px 8px rgba(0,0,0,0.5); letter-spacing: 2px;"></h1>
+      <p id="chapter-p" style="font-size: 13px; color: rgba(255,244,184,0.8); margin: 8px 0 0; text-shadow: 0 1px 4px rgba(0,0,0,0.6);"></p>
+    </div>
+
+    <!-- Click-to-continue after Act 3 (hidden button) -->
+    <button id="btn-continue" data-dom-id="btn-continue"
+            class="fixed z-50 left-1/2 -translate-x-1/2 pointer-events-none"
+            style="bottom: 15%; padding: 14px 36px; border-radius: 30px; background: linear-gradient(135deg, #FFD700, #FFA000); border: 3px solid #fff; color: #4A0E0E; font-family: var(--brand-font-display); font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 0 30px rgba(255,215,0,0.6), 0 6px 20px rgba(0,0,0,0.3); opacity: 0; transform: translateX(-50%) scale(0.8); transition: all 0.6s cubic-bezier(0.34,1.56,0.64,1);"
+            aria-label="进入星光嘉年华">
+      ✨ 进入星光嘉年华 ✨
+    </button>
+
+    <!-- Skip button (top right) -->
+    <button id="btn-skip" class="fixed z-50"
+            style="top: calc(env(safe-area-inset-top, 0px) + 16px); right: 16px; padding: 6px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer; backdrop-filter: blur(8px);"
+            aria-label="跳过">
+      跳过 →
+    </button>
+  </main>
+
+  <script>lucide.createIcons();</script>
+
+  <!-- ========== AUDIO ENGINE ========== -->
+  <script>
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+  let masterGain = null;
+  let drumInterval = null;
+  let waltzOscillators = [];
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      audioCtx = new AudioCtx();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.6;
+      masterGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  // Mysterious drum beat (Act 1)
+  function startMysteryDrums() {
+    stopDrums();
+    let beat = 0;
+    const pattern = [1, 0, 0.5, 0, 1, 0, 0.3, 0.6]; // low-high-low pattern
+    drumInterval = setInterval(() => {
+      const v = pattern[beat % pattern.length];
+      if (v > 0) playDrum(v);
+      beat++;
+    }, 420);
+  }
+  function stopDrums() {
+    if (drumInterval) { clearInterval(drumInterval); drumInterval = null; }
+  }
+  function playDrum(intensity) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(120 * intensity, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.18 * intensity, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    o.connect(g); g.connect(masterGain);
+    o.start(); o.stop(audioCtx.currentTime + 0.4);
+
+    // Higher timpani-like tone
+    if (intensity > 0.5) {
+      const o2 = audioCtx.createOscillator();
+      const g2 = audioCtx.createGain();
+      o2.type = 'triangle';
+      o2.frequency.setValueAtTime(180, audioCtx.currentTime);
+      o2.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime+0.25);
+      g2.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+      o2.connect(g2); g2.connect(masterGain);
+      o2.start(); o2.stop(audioCtx.currentTime+0.3);
+    }
+  }
+
+  // Beam hum (Act 2)
+  let beamHum = null;
+  function startBeamHum() {
+    if (!audioCtx || beamHum) return;
+    const o1 = audioCtx.createOscillator();
+    const o2 = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o1.type = 'sine'; o1.frequency.value = 220;
+    o2.type = 'sine'; o2.frequency.value = 330;
+    g.gain.value = 0.03;
+    o1.connect(g); o2.connect(g); g.connect(masterGain);
+    o1.start(); o2.start();
+    beamHum = { o1, o2, g };
+    // Add sparkle tones occasionally
+    const sparkleInterval = setInterval(() => {
+      if (!beamHum) { clearInterval(sparkleInterval); return; }
+      playTinkle();
+    }, 600);
+    beamHum.sparkleInterval = sparkleInterval;
+  }
+  function stopBeamHum() {
+    if (beamHum) {
+      try { beamHum.o1.stop(); beamHum.o2.stop(); } catch(e){}
+      clearInterval(beamHum.sparkleInterval);
+      beamHum.g.disconnect();
+      beamHum = null;
+    }
+  }
+  function playTinkle() {
+    if (!audioCtx) return;
+    const notes = [523, 659, 784, 988, 1319];
+    const f = notes[Math.floor(Math.random()*notes.length)];
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.04, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+    o.connect(g); g.connect(masterGain);
+    o.start(); o.stop(audioCtx.currentTime+0.3);
+  }
+
+  // Unlock click (Act 2 -> 3)
+  function playUnlock() {
+    if (!audioCtx) return;
+    // "Click-clack" sound
+    [800, 600, 1200].forEach((f, i) => {
+      setTimeout(() => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.08);
+        o.connect(g); g.connect(masterGain);
+        o.start(); o.stop(audioCtx.currentTime+0.08);
+      }, i*100);
+    });
+    // Chord
+    setTimeout(() => {
+      [523, 659, 784, 1047].forEach((f,i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'triangle'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+1.2);
+        o.connect(g); g.connect(masterGain);
+        o.start(); o.stop(audioCtx.currentTime+1.2);
+      });
+    }, 350);
+  }
+
+  // Waltz music (Act 3, gradually increases volume)
+  function startWaltz() {
+    stopDrums();
+    stopBeamHum();
+    if (!audioCtx) return;
+    // Simple waltz arpeggios in C major, 3/4 time
+    const waltzGain = audioCtx.createGain();
+    waltzGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    waltzGain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 4);
+    waltzGain.connect(masterGain);
+
+    const chords = [
+      [261.63, 329.63, 392.00], // C
+      [220.00, 277.18, 329.63], // Am
+      [174.61, 220.00, 261.63], // F
+      [196.00, 246.94, 293.66], // G
+    ];
+    const bassNotes = [130.81, 110.00, 87.31, 98.00];
+
+    let beatCount = 0;
+    const bpm = 120;
+    const beatMs = 60000 / bpm;
+
+    function playBeat() {
+      if (!audioCtx) return;
+      const chordIdx = Math.floor(beatCount / 3) % chords.length;
+      const beatInBar = beatCount % 3;
+      const chord = chords[chordIdx];
+      const bass = bassNotes[chordIdx];
+
+      // Bass on beat 1
+      if (beatInBar === 0) {
+        const bo = audioCtx.createOscillator();
+        const bg = audioCtx.createGain();
+        bo.type = 'triangle'; bo.frequency.value = bass;
+        bg.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        bg.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + beatMs*2.5/1000);
+        bo.connect(bg); bg.connect(waltzGain);
+        bo.start(); bo.stop(audioCtx.currentTime + beatMs*2.5/1000);
+      }
+      // Chord arpeggio note
+      const note = chord[beatInBar];
+      const co = audioCtx.createOscillator();
+      const cg = audioCtx.createGain();
+      co.type = 'sine'; co.frequency.value = note * 2;
+      cg.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      cg.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + beatMs*0.8/1000);
+      co.connect(cg); cg.connect(waltzGain);
+      co.start(); co.stop(audioCtx.currentTime + beatMs*0.8/1000);
+
+      beatCount++;
+    }
+    waltzOscillators.push(waltzGain);
+    const waltzInterval = setInterval(playBeat, beatMs);
+    waltzGain.interval = waltzInterval;
+  }
+  </script>
+
+  <!-- ========== INTERACTION STATE MACHINE ========== -->
+  <script>
+  let act = 0; // 0=intro, 1=darkness, 2=starlight path, 3=curtains, 4=complete
+  let pressing = false;
+  let pressStart = 0;
+  let pressRaf = null;
+  const LONG_PRESS_MS = 3000;
+
+  const mainScene = document.getElementById('main-scene');
+  const vignette = document.getElementById('vignette');
+  const starfield = document.getElementById('starfield');
+  const sceneWorlds = document.getElementById('scene-worlds');
+  const gem1 = document.getElementById('gem-1');
+  const gem2 = document.getElementById('gem-2');
+  const gem3 = document.getElementById('gem-3');
+  const lightBeams = document.getElementById('light-beams');
+  const beam1 = document.getElementById('beam-1');
+  const beam2 = document.getElementById('beam-2');
+  const beam3 = document.getElementById('beam-3');
+  const vortexContainer = document.getElementById('vortex-container');
+  const starPath = document.getElementById('star-path');
+  const pressPrompt = document.getElementById('press-prompt');
+  const pressProgressWrap = document.getElementById('press-progress-wrap');
+  const pressProgress = document.getElementById('press-progress');
+  const pressCount = document.getElementById('press-count');
+  const fingerIcon = document.getElementById('finger-icon');
+  const curtainLeft = document.getElementById('curtain-left');
+  const curtainRight = document.getElementById('curtain-right');
+  const curtainTop = document.getElementById('curtain-top');
+  const finalePreview = document.getElementById('finale-preview');
+  const previewSparkles = document.getElementById('preview-sparkles');
+  const chapterTitle = document.getElementById('chapter-title');
+  const chapterH1 = document.getElementById('chapter-h1');
+  const chapterP = document.getElementById('chapter-p');
+  const btnContinue = document.getElementById('btn-continue');
+  const btnSkip = document.getElementById('btn-skip');
+
+  // Generate starfield dots
+  function populateStarfield() {
+    let html = '';
+    for (let i = 0; i < 80; i++) {
+      const size = Math.random()*2 + 1;
+      const x = Math.random()*100;
+      const y = Math.random()*100;
+      const opacity = Math.random()*0.7 + 0.3;
+      html += `<div style="position:absolute;left:${x}%;top:${y}%;width:${size}px;height:${size}px;background:#fff;border-radius:50%;opacity:${opacity};box-shadow:0 0 ${size*2}px rgba(255,255,255,0.6);"></div>`;
+    }
+    starfield.innerHTML = html;
+  }
+  populateStarfield();
+
+  function setChapter(h1, p) {
+    chapterH1.textContent = h1;
+    chapterP.textContent = p;
+    chapterTitle.style.opacity = '1';
+    chapterTitle.style.transform = 'translateX(-50%) translateY(0)';
+  }
+  function hideChapter() {
+    chapterTitle.style.opacity = '0';
+    chapterTitle.style.transform = 'translateX(-50%) translateY(-20px)';
+  }
+
+  function showTitle(h1, p, duration = 2500, cb) {
+    setChapter(h1, p);
+    setTimeout(() => {
+      hideChapter();
+      setTimeout(cb, 300);
+    }, duration);
+  }
+
+  // ========== START THE SHOW ==========
+  function startShow() {
+    ensureAudio();
+    // Auto-play Act 1 after brief delay
+    setTimeout(act1Darkness, 300);
+  }
+
+  // ========== ACT 1: DARKNESS FALLS ==========
+  function act1Darkness() {
+    act = 1;
+    setChapter('第一幕', '黑暗降临...');
+    startMysteryDrums();
+
+    // Vignette darkens
+    setTimeout(() => {
+      vignette.style.opacity = '1';
+      sceneWorlds.style.opacity = '0.15';
+      sceneWorlds.style.filter = 'brightness(0.3) saturate(0.4)';
+      starfield.style.opacity = '0.6';
+    }, 500);
+
+    // Gems appear one by one
+    setTimeout(() => {
+      hideChapter();
+      gem1.style.opacity = '1';
+      gem1.style.transform = 'scale(1)';
+    }, 300);
+    setTimeout(() => {
+      gem2.style.opacity = '1';
+      gem2.style.transform = 'scale(1)';
+    }, 500);
+    setTimeout(() => {
+      gem3.style.opacity = '1';
+      gem3.style.transform = 'scale(1)';
+    }, 2500);
+
+    // Gems pulse bright
+    setTimeout(() => {
+      [gem1, gem2, gem3].forEach((g, i) => {
+        setTimeout(() => {
+          g.style.animation = 'gemPulse 0.6s ease-in-out 3';
+        }, i*150);
+      });
+    }, 3200);
+
+    // Move to Act 2
+    setTimeout(act2StarlightPath, 6000);
+  }
+
+  // ========== ACT 2: STARLIGHT PATH ==========
+  function act2StarlightPath() {
+    act = 2;
+    setChapter('第二幕', '星光之路');
+    stopDrums();
+
+    // Vignette lightens slightly
+    vignette.style.background = 'radial-gradient(ellipse at center, transparent 10%, rgba(10,5,32,0.8) 70%)';
+
+    // Light beams appear (from three gem positions - they stay in place at center-top)
+    setTimeout(() => {
+      hideChapter();
+      // Move gems up to top area
+      const gemsRow = document.getElementById('gems-row');
+      gemsRow.style.transition = 'all 1s ease-out';
+      gemsRow.style.gap = '60px';
+      gemsRow.style.transform = 'translateY(-120px) scale(0.75)';
+
+      lightBeams.style.opacity = '1';
+      positionBeams();
+      animateBeamsIn();
+      startBeamHum();
+    }, 300);
+
+    // Vortex appears
+    setTimeout(() => {
+      vortexContainer.style.opacity = '1';
+      vortexContainer.style.animation = 'vortexAppear 1s ease-out';
+    }, 2200);
+
+    // Star path rises
+    setTimeout(() => {
+      starPath.style.opacity = '1';
+    }, 3200);
+
+    // Show long-press prompt
+    setTimeout(() => {
+      pressPrompt.style.opacity = '1';
+      pressPrompt.style.transform = 'translateX(-50%) scale(1)';
+      pressPrompt.style.pointerEvents = 'auto';
+      setupLongPress();
+    }, 4200);
+  }
+
+  function positionBeams() {
+    // Calculate beam polygon points from gem positions to center
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    // After gems move up via translateY(-120px) scale(0.75), they're at center-top area
+    // Spread them horizontally: left, center, right
+    const gemY = h/2 - 120; // approximate after translateY
+    const spread = 90; // horizontal spread between gems
+    const gemPositions = [
+      { x: cx - spread, y: gemY },   // gem1 (green) left
+      { x: cx,          y: gemY - 20 }, // gem2 (cyan) center slightly higher
+      { x: cx + spread, y: gemY }    // gem3 (purple) right
+    ];
+
+    const beams = [beam1, beam2, beam3];
+    gemPositions.forEach((pos, i) => {
+      const beam = beams[i];
+      const x = pos.x;
+      const y = pos.y;
+      const spreadW = 10;
+      const pts = `${x-spreadW},${y} ${x+spreadW},${y} ${cx+spreadW*0.2},${cy} ${cx-spreadW*0.2},${cy}`;
+      beam.setAttribute('points', pts);
+    });
+  }
+
+  function animateBeamsIn() {
+    // Beams are drawn at 0 width, animate opacity is handled by SVG container
+    [beam1, beam2, beam3].forEach((b, i) => {
+      b.style.opacity = '0';
+      b.style.transition = 'opacity 0.8s';
+      setTimeout(() => { b.style.opacity = '0.9'; }, i*300);
+    });
+  }
+
+  // Long press detection
+  function setupLongPress() {
+    const startPress = (e) => {
+      if (act !== 2) return;
+      e.preventDefault();
+      ensureAudio();
+      pressing = true;
+      pressStart = Date.now();
+      pressProgressWrap.style.opacity = '1';
+      fingerIcon.style.animation = 'none';
+      tickPress();
+    };
+    const endPress = () => {
+      if (!pressing) return;
+      pressing = false;
+      if (pressRaf) cancelAnimationFrame(pressRaf);
+      // Reset progress
+      pressProgress.style.strokeDashoffset = '188.5';
+      pressCount.textContent = '3';
+      pressProgressWrap.style.opacity = '0';
+      fingerIcon.style.animation = 'fingerPress 1.2s ease-in-out infinite';
+    };
+
+    mainScene.addEventListener('mousedown', startPress);
+    mainScene.addEventListener('touchstart', startPress, { passive: false });
+    document.addEventListener('mouseup', endPress);
+    document.addEventListener('touchend', endPress);
+    document.addEventListener('touchcancel', endPress);
+  }
+
+  function tickPress() {
+    if (!pressing) return;
+    const elapsed = Date.now() - pressStart;
+    const pct = Math.min(1, elapsed / LONG_PRESS_MS);
+    pressProgress.style.strokeDashoffset = String(188.5 * (1 - pct));
+    // Countdown number
+    const remaining = Math.ceil(3 * (1 - pct));
+    pressCount.textContent = String(Math.max(0, remaining));
+
+    // Haptic-like scale on gems/vortex
+    const pulseAmt = 1 + pct * 0.3;
+    vortexContainer.style.transform = `translate(-50%, -50%) scale(${pulseAmt})`;
+
+    if (pct >= 1) {
+      pressing = false;
+      onLongPressComplete();
+      return;
+    }
+    pressRaf = requestAnimationFrame(tickPress);
+  }
+
+  function onLongPressComplete() {
+    playUnlock();
+    pressPrompt.style.opacity = '0';
+    pressPrompt.style.transform = 'translateX(-50%) scale(0.7)';
+    pressPrompt.style.pointerEvents = 'none';
+    if (pressRaf) cancelAnimationFrame(pressRaf);
+
+    // Big burst from vortex
+    vortexContainer.style.animation = 'vortexBurst 1s ease-out forwards';
+
+    // Move to Act 3
+    setTimeout(act3CurtainsOpen, 900);
+  }
+
+  // ========== ACT 3: CURTAINS OPEN ==========
+  function act3CurtainsOpen() {
+    act = 3;
+    setChapter('第三幕', '大门开启...');
+    stopBeamHum();
+
+    setTimeout(() => {
+      hideChapter();
+      // First: curtains SWEEP IN to cover the scene
+      curtainTop.style.opacity = '1';
+      curtainLeft.style.transform = 'translateX(0)';
+      curtainRight.style.transform = 'translateX(0)';
+
+      // After curtains fully close, switch to finale preview behind, then open
+      setTimeout(() => {
+        finalePreview.style.opacity = '1';
+        populatePreviewSparkles();
+
+        // Now open curtains
+        setTimeout(() => {
+          previewSparkles.style.opacity = '1';
+          // Longer transition for dramatic opening
+          curtainLeft.style.transition = 'transform 2.5s cubic-bezier(0.4,0,0.2,1)';
+          curtainRight.style.transition = 'transform 2.5s cubic-bezier(0.4,0,0.2,1)';
+          curtainLeft.style.transform = 'translateX(-105%)';
+          curtainRight.style.transform = 'translateX(105%)';
+          curtainTop.style.opacity = '0';
+          startWaltz();
+        }, 600);
+      }, 1100);
+    }, 300);
+
+    // Show continue button after curtains open
+    setTimeout(() => {
+      act = 4;
+      btnContinue.style.opacity = '1';
+      btnContinue.style.transform = 'translateX(-50%) scale(1)';
+      btnContinue.style.pointerEvents = 'auto';
+      btnContinue.addEventListener('click', goToFinale, { once: false });
+    }, 4500);
+  }
+
+  function populatePreviewSparkles() {
+    let html = '';
+    for (let i = 0; i < 40; i++) {
+      const size = Math.random()*4+2;
+      const x = Math.random()*100;
+      const y = Math.random()*100;
+      const colors = ['#FFD700','#FF6B6B','#4ECDC4','#A29BFE','#FD79A8','#55EFC4'];
+      const c = colors[Math.floor(Math.random()*colors.length)];
+      const delay = Math.random()*2;
+      html += `<div style="position:absolute;left:${x}%;top:${y}%;width:${size}px;height:${size}px;background:${c};border-radius:50%;box-shadow:0 0 ${size*2}px ${c};animation:fwParticle 3s ease-in-out ${delay}s infinite;"></div>`;
+    }
+    previewSparkles.innerHTML = html;
+  }
+
+  function goToFinale() {
+    // Navigate to finale page
+    window.location.href = 'starlight-finale-v2.html';
+  }
+
+  // Skip button
+  btnSkip.addEventListener('click', () => {
+    goToFinale();
+  });
+
+  // Unlock audio on first touch
+  const unlockAudio = () => {
+    ensureAudio();
+    mainScene.removeEventListener('click', unlockAudio);
+    mainScene.removeEventListener('touchstart', unlockAudio);
+  };
+  mainScene.addEventListener('click', unlockAudio);
+  mainScene.addEventListener('touchstart', unlockAudio, { passive: true });
+
+  // Kick off
+  setTimeout(startShow, 300);
+
+  // Handle resize for beams
+  window.addEventListener('resize', () => {
+    if (act >= 2) positionBeams();
+  });
+  </script>
+
+  <!-- ========== ANIMATIONS ========== -->
+  <style>
+    .vstar { position: absolute; font-size: 16px; transform-origin: center; text-shadow: 0 0 8px currentColor; }
+    .vstar.small { font-size: 12px; }
+    .vstar.tiny { font-size: 14px; }
+    @keyframes vortexSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes corePulse {
+      0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+      50% { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+    }
+    @keyframes vortexAppear {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(0); }
+      100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    }
+    @keyframes vortexBurst {
+      0% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(3); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(5); }
+    }
+    @keyframes gemPulse {
+      0%,100% { filter: drop-shadow(0 0 20px currentColor) brightness(1); }
+      50% { filter: drop-shadow(0 0 40px white) brightness(1.5); transform: scale(1.2); }
+    }
+    @keyframes fingerPress {
+      0%,100% { transform: scale(1) translateY(0); }
+      50% { transform: scale(0.85) translateY(10px); }
+    }
+    @keyframes fwParticle {
+      0%,100% { transform: translateY(0) scale(1); opacity: 0.6; }
+      50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    }
+    .path-star { animation: twinkle 1.5s ease-in-out infinite; }
+    @keyframes twinkle {
+      0%,100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+    #gem-1 { color: rgba(102,187,106,0.8); }
+    #gem-2 { color: rgba(78,205,196,0.8); }
+    #gem-3 { color: rgba(171,71,188,0.8); }
+  </style>
+
+  <script>
+  // 页面自动朗读
+  (function() {
+    const AUTO_SPEAK_WELCOME = '太棒了！你完成了一个岛屿的冒险！';
+    
+    function trySpeakWelcome() {
+      if (window.VoiceGuide && typeof window.VoiceGuide.speak === 'function') {
+        setTimeout(function() {
+          window.VoiceGuide.speak(AUTO_SPEAK_WELCOME);
+        }, 300);
+      } else {
+        setTimeout(trySpeakWelcome, 200);
+      }
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', trySpeakWelcome);
+    } else {
+      trySpeakWelcome();
+    }
+  })();
+  </script>
+
+
+  <script>
+  // 语音引导增强：点击文字朗读 + 关键提示自动朗读
+  (function() {
+    // 等待 VoiceGuide 就绪
+    function waitForVoiceGuide(callback) {
+      if (window.VoiceGuide) {
+        callback();
+      } else {
+        setTimeout(function() { waitForVoiceGuide(callback); }, 100);
+      }
+    }
+    
+    waitForVoiceGuide(function() {
+      // 给所有提示类元素添加点击朗读
+      function addClickSpeak(selector) {
+        var els = document.querySelectorAll(selector);
+        els.forEach(function(el) {
+          el.style.cursor = 'pointer';
+          el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var text = el.textContent || el.innerText;
+            if (text && text.trim()) {
+              window.VoiceGuide.speak(text.trim());
+            }
+          });
+        });
+      }
+      
+      // 常见的提示文字选择器
+      var selectors = [
+        '#hint-text',
+        '#hint-banner',
+        '#error-hint-text',
+        '#mic-status',
+        '#mic-hint',
+        '#friction-hint',
+        '.hint-text',
+        '.tip-text',
+        '#gem-title',
+        '#gem-subtitle'
+      ];
+      
+      selectors.forEach(function(sel) {
+        addClickSpeak(sel);
+      });
+      
+      // 自动朗读初始的 hint-text
+      var initialHint = document.querySelector('#hint-text, .hint-text');
+      if (initialHint && initialHint.textContent.trim()) {
+        setTimeout(function() {
+          window.VoiceGuide.speak(initialHint.textContent.trim());
+        }, 300);
+      }
+    });
+  })();
+  </script>
+
+
+  <script>
+  // 引导手势动画系统
+  window.GestureGuide = {
+    STORAGE_KEY: 'starlight_gesture_seen',
+    
+    
+    GESTURE_ENABLE_KEY: 'starlight_gesture_enabled',
+    
+    _enabled: true,
+    
+    // 检查手势指引是否启用
+    isEnabled: function() {
+      const v = localStorage.getItem(this.GESTURE_ENABLE_KEY);
+      return v !== 'false';
+    },
+    
+    // 设置手势指引启用状态
+    setEnabled: function(enabled) {
+      this._enabled = enabled;
+      localStorage.setItem(this.GESTURE_ENABLE_KEY, enabled ? 'true' : 'false');
+    },
+    
+    // 检查是否已经看过某个手势
+    hasSeen: function(id) { {
+      try {
+        var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        return seen[id] === true;
+      } catch(e) { return false; }
+    },
+    
+    // 标记已看过
+    markSeen: function(id) {
+      try {
+        var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        seen[id] = true;
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(seen));
+      } catch(e) {}
+    },
+    
+    // 移除手势
+    remove: function(overlay) {
+      if (overlay && overlay.parentNode) {
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s';
+        setTimeout(function() {
+          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 300);
+      }
+    },
+    
+    // === 点击手势 ===
+    showTap: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'tap_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      // 手指 emoji
+      var hand = document.createElement('div');
+      hand.className = 'gesture-hand gesture-tap-anim';
+      hand.textContent = '👆';
+      hand.style.left = (rect.left + rect.width / 2) + 'px';
+      hand.style.top = (rect.top + rect.height / 2) + 'px';
+      hand.style.fontSize = opts.size || '80px';
+      overlay.appendChild(hand);
+      
+      // 涟漪
+      var ripple = document.createElement('div');
+      ripple.className = 'gesture-ripple gesture-ripple-anim';
+      ripple.style.left = (rect.left + rect.width / 2) + 'px';
+      ripple.style.top = (rect.top + rect.height / 2) + 'px';
+      overlay.appendChild(ripple);
+      
+      document.body.appendChild(overlay);
+      
+      var self = this;
+      var timer = setTimeout(function() {
+        self.remove(overlay);
+        if (once) self.markSeen(id);
+        if (onComplete) onComplete();
+      }, duration);
+      
+      overlay._timer = timer;
+      return overlay;
+    },
+    
+    // === 拖拽手势 ===
+    showDrag: function(fromEl, toEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'drag_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 4000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var fromRect = fromEl.getBoundingClientRect();
+      var toRect = toEl.getBoundingClientRect();
+      
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      var hand = document.createElement('div');
+      hand.className = 'gesture-hand';
+      hand.textContent = '👆';
+      hand.style.fontSize = opts.size || '72px';
+      hand.style.position = 'absolute';
+      hand.style.top = (fromRect.top + fromRect.height / 2) + 'px';
+      hand.style.left = (fromRect.left + fromRect.width / 2) + 'px';
+      hand.style.opacity = '0';
+      hand.style.transform = 'translate(-50%,-50%)';
+      hand.style.transition = 'none';
+      overlay.appendChild(hand);
+      
+      document.body.appendChild(overlay);
+      
+      // 动画序列：出现→拖到目标→放下→消失
+      var steps = [
+        { t: 0,    opacity: 0,   x: fromRect.left + fromRect.width/2, y: fromRect.top + fromRect.height/2, scale: 1.3 },
+        { t: 300,  opacity: 1, x: fromRect.left + fromRect.width/2, y: fromRect.top + fromRect.height/2, scale: 1 },
+        { t: 1800, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+        { t: 2200, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 0.85 },
+        { t: 2500, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+        { t: 3000, opacity: 0,   x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+      ];
+      
+      var startTime = null;
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        
+        // 找到当前所在的两个关键帧
+        var prev = steps[0], next = steps[steps.length - 1];
+        for (var i = 0; i < steps.length - 1; i++) {
+          if (elapsed >= steps[i].t && elapsed < steps[i+1].t) {
+            prev = steps[i]; next = steps[i+1]; break;
+          }
+        }
+        if (elapsed >= steps[steps.length-1].t) {
+          prev = next = steps[steps.length-1];
+        }
+        
+        var progress = (next.t === prev.t) ? 1 : (elapsed - prev.t) / (next.t - prev.t);
+        var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+        
+        var curX = prev.x + (next.x - prev.x) * ease;
+        var curY = prev.y + (next.y - prev.y) * ease;
+        var curOp = prev.opacity + (next.opacity - prev.opacity) * ease;
+        var curScale = prev.scale + (next.scale - prev.scale) * ease;
+        
+        hand.style.left = curX + 'px';
+        hand.style.top = curY + 'px';
+        hand.style.opacity = curOp;
+        hand.style.transform = 'translate(-50%,-50%) scale(' + curScale + ')';
+        
+        if (elapsed < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          GestureGuide.remove(overlay);
+          if (once) GestureGuide.markSeen(id);
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(animate);
+      
+      return overlay;
+    },
+    
+    // === 双指摩擦手势 ===
+    showRub: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'rub_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3500;
+      var cycles = opts.cycles || 3;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      // 左手
+      var handL = document.createElement('div');
+      handL.className = 'gesture-hand';
+      handL.textContent = '👆';
+      handL.style.fontSize = '64px';
+      handL.style.position = 'absolute';
+      handL.style.top = (rect.top + rect.height / 2 - 10) + 'px';
+      handL.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+      handL.style.opacity = '0.9';
+      handL.style.transform = 'translate(-50%,-50%)';
+      overlay.appendChild(handL);
+      
+      // 右手
+      var handR = document.createElement('div');
+      handR.className = 'gesture-hand';
+      handR.textContent = '👆';
+      handR.style.fontSize = '64px';
+      handR.style.position = 'absolute';
+      handR.style.top = (rect.top + rect.height / 2 + 10) + 'px';
+      handR.style.left = (rect.left + rect.width / 2 + 20) + 'px';
+      handR.style.opacity = '0.9';
+      handR.style.transform = 'translate(-50%,-50%)';
+      overlay.appendChild(handR);
+      
+      document.body.appendChild(overlay);
+      
+      // 来回搓动
+      var rubDuration = 600; // 每次来回 600ms
+      var totalRubTime = rubDuration * cycles;
+      var startTime = null;
+      var fadeStart = totalRubTime + 500;
+      
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        
+        if (elapsed < totalRubTime) {
+          // 搓动阶段
+          var phase = (elapsed % rubDuration) / rubDuration;
+          var offset = Math.sin(phase * Math.PI * 2) * 26;
+          handL.style.transform = 'translate(calc(-50% + ' + (-offset) + 'px), -50%)';
+          handR.style.transform = 'translate(calc(-50% + ' + offset + 'px), -50%)';
+          handL.style.opacity = '0.9';
+          handR.style.opacity = '0.9';
+        } else if (elapsed < fadeStart) {
+          // 搓完停留
+          handL.style.opacity = '0.9';
+          handR.style.opacity = '0.9';
+        } else {
+          // 淡出
+          var fadeProgress = (elapsed - fadeStart) / (duration - fadeStart);
+          var fadeOp = Math.max(0, 0.65 * (1 - fadeProgress));
+          handL.style.opacity = fadeOp;
+          handR.style.opacity = fadeOp;
+        }
+        
+        if (elapsed < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          GestureGuide.remove(overlay);
+          if (once) GestureGuide.markSeen(id);
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(animate);
+      
+      return overlay;
+    },
+    
+    // === 按住手势 ===
+    showPress: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'press_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      var hand = document.createElement('div');
+      hand.className = 'gesture-hand gesture-press-anim';
+      hand.textContent = '👇';
+      hand.style.left = (rect.left + rect.width / 2) + 'px';
+      hand.style.top = (rect.top + rect.height / 2) + 'px';
+      hand.style.fontSize = opts.size || '80px';
+      overlay.appendChild(hand);
+      
+      document.body.appendChild(overlay);
+      
+      var self = this;
+      setTimeout(function() {
+        self.remove(overlay);
+        if (once) self.markSeen(id);
+        if (onComplete) onComplete();
+      }, duration);
+      
+      return overlay;
+    },
+    
+    // === 喊叫手势 ===
+    showShout: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'shout_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      // 嘴巴 emoji 靠近麦克风
+      var mouth = document.createElement('div');
+      mouth.className = 'gesture-hand';
+      mouth.textContent = '📢';
+      mouth.style.left = (rect.left + rect.width / 2) + 'px';
+      mouth.style.top = (rect.top - 40) + 'px';
+      mouth.style.fontSize = '64px';
+      mouth.style.opacity = '0';
+      mouth.style.transform = 'translate(-50%,-50%)';
+      overlay.appendChild(mouth);
+      
+      // 声波效果
+      for (var i = 1; i <= 3; i++) {
+        var wave = document.createElement('div');
+        wave.style.position = 'absolute';
+        wave.style.left = (rect.left + rect.width / 2) + 'px';
+        wave.style.top = (rect.top - 20) + 'px';
+        wave.style.width = (20 + i * 15) + 'px';
+        wave.style.height = (20 + i * 15) + 'px';
+        wave.style.borderRadius = '50%';
+        wave.style.border = '2px solid rgba(242,201,76,0.4)';
+        wave.style.opacity = '0';
+        wave.style.transform = 'translate(-50%,-50%)';
+        wave.style.pointerEvents = 'none';
+        wave._delay = i * 200;
+        wave._index = i;
+        overlay.appendChild(wave);
+      }
+      
+      document.body.appendChild(overlay);
+      
+      var startTime = null;
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        var progress = elapsed / duration;
+        
+        // 嘴巴淡入淡出
+        if (progress < 0.15) {
+          mouth.style.opacity = (progress / 0.15) * 0.7;
+        } else if (progress < 0.8) {
+          mouth.style.opacity = '1';
+        } else {
+          mouth.style.opacity = Math.max(0, 0.7 * (1 - (progress - 0.8) / 0.2));
+        }
+        
+        // 声波扩散
+        var children = overlay.children;
+        for (var i = 1; i < children.length; i++) {
+          var w = children[i];
+          if (!w._delay) continue;
+          var wElapsed = elapsed - w._delay;
+          if (wElapsed > 0 && wElapsed < 1500) {
+            var wProgress = (wElapsed % 800) / 800;
+            w.style.opacity = Math.max(0, 0.4 * (1 - wProgress));
+            var wScale = 1 + wProgress * 1.5;
+            w.style.transform = 'translate(-50%,-50%) scale(' + wScale + ')';
+          } else {
+            w.style.opacity = '0';
+          }
+        }
+        
+        if (elapsed < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          GestureGuide.remove(overlay);
+          if (once) GestureGuide.markSeen(id);
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(animate);
+      
+      return overlay;
+    }
+  };
+  </script>
+
+
+  <!-- ========== 语音旁白系统 ========== -->
+  <button id="voice-settings-btn" class="voice-settings-btn" aria-label="语音设置">🔊</button>
+  <div id="voice-settings-panel" class="voice-settings-panel">
+    <div class="voice-settings-title">游戏设置</div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">语音引导</span>
+      <button id="voice-guide-toggle" class="voice-toggle on" aria-label="语音引导开关"></button>
+    </div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">手势指引</span>
+      <button id="gesture-guide-toggle" class="voice-toggle on" aria-label="手势指引开关"></button>
+    </div>
+    <div class="voice-setting-row" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 12px;">
+      <span class="voice-setting-label">重置手势演示</span>
+      <button id="reset-gesture-btn" style="background: rgba(255,200,60,0.3); border: 1px solid rgba(255,200,60,0.5); color: #FFC048; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer;">重置</button>
+    </div>
+  </div>
+  <script>
+  (function() {
+    const STORAGE_KEY = 'starlight_voice_guide';
+    const synth = window.speechSynthesis;
+    
+    function isVoiceGuideEnabled() {
+      const v = localStorage.getItem(STORAGE_KEY);
+      return v !== 'false';
+    }
+    
+    function setVoiceGuideEnabled(enabled) {
+      localStorage.setItem(STORAGE_KEY, enabled ? 'true' : 'false');
+      updateBtnIcon();
+      if (enabled) {
+        speakGuide('语音引导已开启');
+      }
+    }
+    
+    function updateBtnIcon() {
+      const btn = document.getElementById('voice-settings-btn');
+      if (!btn) return;
+      if (isVoiceGuideEnabled()) {
+        btn.textContent = '🔊';
+        btn.classList.remove('muted');
+      } else {
+        btn.textContent = '🔇';
+        btn.classList.add('muted');
+      }
+    }
+    
+    let currentUtterance = null;
+    
+    function stopSpeak() {
+      if (synth && synth.speaking) {
+        synth.cancel();
+      }
+      currentUtterance = null;
+    }
+    
+    function speakGuide(text, options) {
+      if (!isVoiceGuideEnabled()) return;
+      if (!synth) return;
+      if (!text || !text.trim()) return;
+      
+      stopSpeak();
+      
+      const opts = options || {};
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = opts.rate || 0.9;
+      utter.pitch = opts.pitch || 1.3;
+      utter.volume = opts.volume || 1;
+      
+      const voices = synth.getVoices();
+      const zhVoice = voices.find(function(v) {
+        return v.lang && v.lang.toLowerCase().indexOf('zh') === 0;
+      });
+      if (zhVoice) utter.voice = zhVoice;
+      
+      currentUtterance = utter;
+      synth.speak(utter);
+    }
+    
+    function speakEn(text, options) {
+      if (!isVoiceGuideEnabled()) return;
+      if (!synth) return;
+      
+      stopSpeak();
+      
+      const opts = options || {};
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = opts.rate || 0.8;
+      utter.pitch = opts.pitch || 1.2;
+      utter.volume = opts.volume || 1;
+      
+      currentUtterance = utter;
+      synth.speak(utter);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('voice-settings-btn');
+      const panel = document.getElementById('voice-settings-panel');
+      const toggle = document.getElementById('voice-guide-toggle');
+      const resetBtn = document.getElementById('reset-gesture-btn');
+      
+      updateBtnIcon();
+      if (isVoiceGuideEnabled()) {
+        if (toggle) toggle.classList.add('on');
+      } else {
+        if (toggle) toggle.classList.remove('on');
+      }
+      
+      if (btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (panel) panel.classList.toggle('show');
+        });
+      }
+      
+      document.addEventListener('click', function(e) {
+        if (panel && !panel.contains(e.target) && e.target !== btn) {
+          panel.classList.remove('show');
+        }
+      });
+      
+      if (toggle) {
+        toggle.addEventListener('click', function() {
+          const enabled = !isVoiceGuideEnabled();
+          setVoiceGuideEnabled(enabled);
+          if (enabled) {
+            toggle.classList.add('on');
+          } else {
+            toggle.classList.remove('on');
+          }
+        });
+      }
+      
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+          try {
+            localStorage.removeItem('starlight_gesture_seen');
+            alert('手势演示已重置！刷新页面即可重新看到引导动画。');
+          } catch(e) {}
+        });
+      }
+      
+      if (synth) {
+        synth.getVoices();
+        window.addEventListener('voiceschanged', function() {
+          synth.getVoices();
+        });
+      }
+    });
+    
+    window.VoiceGuide = {
+      speak: speakGuide,
+      speakEn: speakEn,
+      stop: stopSpeak,
+      isEnabled: isVoiceGuideEnabled
+    };
+  })();
+  </script>
+
+
+  <!-- ========== 小星星向导 ========== -->
+  <div id="star-guide-container" class="star-guide-container">
+    <div id="star-guide-balloon" class="star-guide-balloon"></div>
+    <div id="star-guide" class="star-guide" title="小星星向导">⭐</div>
+  </div>
+  <script>
+  // 小星星向导系统
+  window.StarGuide = {
+    container: null,
+    star: null,
+    balloon: null,
+    currentStep: 0,
+    idleTimer: null,
+    idleTimeout: 3000,
+    isFlying: false,
+    targetGlow: null,
+    
+    // 每个页面的引导步骤配置
+    steps: [],
+    
+    init: function(stepsConfig) {
+      this.container = document.getElementById('star-guide-container');
+      this.star = document.getElementById('star-guide');
+      this.balloon = document.getElementById('star-guide-balloon');
+      this.steps = stepsConfig || [];
+      this.currentStep = 0;
+      
+      if (!this.container || !this.star || !this.balloon) return;
+      
+      var self = this;
+      
+      // 星星点击事件
+      this.star.addEventListener('click', function() {
+        self.showCurrentStep();
+      });
+      
+      // 监听用户操作（重置空闲计时器）
+      document.addEventListener('mousedown', function() { self.resetIdleTimer(); });
+      document.addEventListener('touchstart', function() { self.resetIdleTimer(); });
+      document.addEventListener('pointerdown', function() { self.resetIdleTimer(); });
+      
+      // 启动空闲检测
+      this.startIdleTimer();
+      
+      // 页面加载完成后，延迟显示星星
+      setTimeout(function() {
+        self.container.classList.remove('hidden');
+      }, 500);
+    },
+    
+    startIdleTimer: function() {
+      var self = this;
+      this.idleTimer = setTimeout(function() {
+        self.onIdle();
+      }, this.idleTimeout);
+    },
+    
+    resetIdleTimer: function() {
+      if (this.idleTimer) {
+        clearTimeout(this.idleTimer);
+      }
+      this.startIdleTimer();
+      // 隐藏气球
+      this.hideBalloon();
+    },
+    
+    onIdle: function() {
+      if (this.isFlying) return;
+      if (this.currentStep >= this.steps.length) return;
+      
+      var step = this.steps[this.currentStep];
+      if (!step) return;
+      
+      // 如果步骤需要等待某个条件，则检查
+      if (step.condition && !step.condition()) {
+        this.startIdleTimer();
+        return;
+      }
+      
+      this.showCurrentStep();
+    },
+    
+    showCurrentStep: function() {
+      if (this.currentStep >= this.steps.length) return;
+      
+      var step = this.steps[this.currentStep];
+      if (!step) return;
+      
+      var self = this;
+      
+      // 如果有目标元素，飞过去
+      if (step.target) {
+        var targetEl = typeof step.target === 'string' 
+          ? document.querySelector(step.target) 
+          : step.target;
+        
+        if (targetEl) {
+          this.flyTo(targetEl, function() {
+            self.speak(step.speak || step.text || '看！那里有一个发光的圈圈，点一下试试！');
+            self.showBalloon(step.text || '点一下试试！');
+            self.highlightTarget(targetEl);
+          });
+        } else {
+          // 找不到目标，直接显示提示
+          this.speak(step.speak || step.text);
+          this.showBalloon(step.text);
+        }
+      } else {
+        // 没有目标，直接显示提示
+        this.speak(step.speak || step.text);
+        this.showBalloon(step.text);
+      }
+    },
+    
+    flyTo: function(targetEl, callback) {
+      this.isFlying = true;
+      
+      var starRect = this.star.getBoundingClientRect();
+      var targetRect = targetEl.getBoundingClientRect();
+      
+      var startX = starRect.left + starRect.width / 2;
+      var startY = starRect.top + starRect.height / 2;
+      var endX = targetRect.left + targetRect.width / 2;
+      var endY = targetRect.top + targetRect.height / 2 - 40;
+      
+      // 创建飞行中的星星克隆体
+      var flyingStar = document.createElement('div');
+      flyingStar.className = 'star-guide-flying';
+      flyingStar.textContent = '⭐';
+      flyingStar.style.left = startX + 'px';
+      flyingStar.style.top = startY + 'px';
+      flyingStar.style.transform = 'translate(-50%, -50%)';
+      document.body.appendChild(flyingStar);
+      
+      // 隐藏原星星
+      this.container.classList.add('hidden');
+      
+      // 飞行动画
+      var duration = 800;
+      var startTime = null;
+      
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        
+        // 缓动函数
+        var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+        
+        var curX = startX + (endX - startX) * ease;
+        var curY = startY + (endY - startY) * ease;
+        
+        flyingStar.style.left = curX + 'px';
+        flyingStar.style.top = curY + 'px';
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // 动画结束，移除飞行星星，显示原星星在目标位置
+          document.body.removeChild(flyingStar);
+          
+          // 将原星星移到目标位置
+          self.container.style.position = 'fixed';
+          self.container.style.left = (endX - 30) + 'px';
+          self.container.style.top = (endY - 30) + 'px';
+          self.container.style.right = 'auto';
+          self.container.style.bottom = 'auto';
+          self.container.classList.remove('hidden');
+          
+          self.isFlying = false;
+          if (callback) callback();
+        }
+      }
+      
+      requestAnimationFrame(animate);
+    },
+    
+    returnToCorner: function() {
+      if (this.isFlying) return;
+      
+      var self = this;
+      
+      // 创建飞行中的星星克隆体
+      var starRect = this.star.getBoundingClientRect();
+      var startX = starRect.left + starRect.width / 2;
+      var startY = starRect.top + starRect.height / 2;
+      
+      var endX = window.innerWidth - 54;
+      var endY = window.innerHeight - 54;
+      
+      var flyingStar = document.createElement('div');
+      flyingStar.className = 'star-guide-flying';
+      flyingStar.textContent = '⭐';
+      flyingStar.style.left = startX + 'px';
+      flyingStar.style.top = startY + 'px';
+      flyingStar.style.transform = 'translate(-50%, -50%)';
+      document.body.appendChild(flyingStar);
+      
+      this.container.classList.add('hidden');
+      this.isFlying = true;
+      
+      var duration = 600;
+      var startTime = null;
+      
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        
+        var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+        
+        var curX = startX + (endX - startX) * ease;
+        var curY = startY + (endY - startY) * ease;
+        
+        flyingStar.style.left = curX + 'px';
+        flyingStar.style.top = curY + 'px';
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          document.body.removeChild(flyingStar);
+          
+          self.container.style.position = 'fixed';
+          self.container.style.right = '24px';
+          self.container.style.bottom = '24px';
+          self.container.style.left = 'auto';
+          self.container.style.top = 'auto';
+          self.container.classList.remove('hidden');
+          
+          self.isFlying = false;
+        }
+      }
+      
+      requestAnimationFrame(animate);
+    },
+    
+    showBalloon: function(text) {
+      if (!this.balloon) return;
+      this.balloon.textContent = text;
+      this.balloon.classList.add('show');
+      
+      // 3秒后自动隐藏
+      setTimeout(function() {
+        this.hideBalloon();
+      }.bind(this), 3500);
+    },
+    
+    hideBalloon: function() {
+      if (!this.balloon) return;
+      this.balloon.classList.remove('show');
+    },
+    
+    highlightTarget: function(targetEl) {
+      // 移除旧的光环
+      if (this.targetGlow && this.targetGlow.parentNode) {
+        this.targetGlow.parentNode.removeChild(this.targetGlow);
+      }
+      
+      var rect = targetEl.getBoundingClientRect();
+      this.targetGlow = document.createElement('div');
+      this.targetGlow.className = 'star-guide-target-glow';
+      this.targetGlow.style.left = (rect.left - 8) + 'px';
+      this.targetGlow.style.top = (rect.top - 8) + 'px';
+      this.targetGlow.style.width = (rect.width + 16) + 'px';
+      this.targetGlow.style.height = (rect.height + 16) + 'px';
+      
+      document.body.appendChild(this.targetGlow);
+      
+      // 3秒后移除光环
+      setTimeout(function() {
+        if (this.targetGlow && this.targetGlow.parentNode) {
+          this.targetGlow.parentNode.removeChild(this.targetGlow);
+          this.targetGlow = null;
+        }
+      }.bind(this), 3500);
+    },
+    
+    speak: function(text) {
+      if (window.VoiceGuide && window.VoiceGuide.speak) {
+        window.VoiceGuide.speak(text);
+      }
+    },
+    
+    nextStep: function() {
+      // 清除目标光环
+      if (this.targetGlow && this.targetGlow.parentNode) {
+        this.targetGlow.parentNode.removeChild(this.targetGlow);
+        this.targetGlow = null;
+      }
+      
+      this.hideBalloon();
+      this.currentStep++;
+      
+      // 返回角落
+      setTimeout(function() {
+        this.returnToCorner();
+        
+        // 重新启动空闲检测
+        setTimeout(function() {
+          this.startIdleTimer();
+        }.bind(this), 1000);
+      }.bind(this), 500);
+    },
+    
+    reset: function() {
+      this.currentStep = 0;
+      this.returnToCorner();
+      this.hideBalloon();
+      if (this.targetGlow && this.targetGlow.parentNode) {
+        this.targetGlow.parentNode.removeChild(this.targetGlow);
+        this.targetGlow = null;
+      }
+      this.startIdleTimer();
+    }
+  };
+  </script>
+
+</body>
+</html>

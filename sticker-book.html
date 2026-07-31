@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>星光贴纸簿</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --star-gold: #FDCB6E;
+  --star-dark: #0B0C10;
+  --star-purple: #6C5CE7;
+  --star-light: #C5C6C7;
+  --star-blue: #45A29E;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Nunito', 'PingFang SC', sans-serif;
+  background: radial-gradient(ellipse at top, #1a1a3e 0%, #0B0C10 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: white;
+}
+
+/* 星空背景 */
+.stars-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 2s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* 导航栏 */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+}
+.back-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.back-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+.header-title {
+  font-size: 18px;
+  font-weight: 800;
+  text-shadow: 0 0 20px rgba(253,203,110,0.5);
+}
+.sticker-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--star-gold);
+  background: rgba(253,203,110,0.15);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+/* 内容区域 */
+.main-content {
+  padding: calc(env(safe-area-inset-top, 0px) + 70px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* 成就徽章 */
+.achievement-badge {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.achievement-badge.unlocked {
+  animation: badgeGlow 2s ease-in-out infinite;
+}
+@keyframes badgeGlow {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(253,203,110,0.5)); }
+  50% { filter: drop-shadow(0 0 30px rgba(253,203,110,0.8)); }
+}
+.badge-icon {
+  font-size: 80px;
+  margin-bottom: 8px;
+}
+.badge-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--star-gold);
+  margin-bottom: 4px;
+}
+.badge-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+}
+
+/* 贴纸网格 */
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* 贴纸卡片 */
+.sticker-card {
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.sticker-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(253,203,110,0.5);
+}
+.sticker-card:active {
+  transform: scale(0.95);
+}
+.sticker-card.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sticker-card.locked:hover {
+  transform: none;
+}
+
+/* 星光边框 */
+.sticker-card.unlocked {
+  border-color: var(--star-gold);
+  box-shadow: 0 0 20px rgba(253,203,110,0.3), inset 0 0 30px rgba(253,203,110,0.1);
+}
+.sticker-card.unlocked::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(45deg, transparent 30%, rgba(253,203,110,0.3) 50%, transparent 70%);
+  animation: borderShine 3s linear infinite;
+}
+@keyframes borderShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 贴纸内容 */
+.sticker-emoji {
+  font-size: 56px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  transition: transform 0.3s;
+}
+.sticker-card.unlocked:active .sticker-emoji {
+  transform: scale(1.2) rotate(10deg);
+}
+.sticker-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+}
+.sticker-card.locked .sticker-emoji {
+  font-size: 40px;
+  opacity: 0.3;
+}
+.sticker-card.locked .sticker-name {
+  color: rgba(255,255,255,0.3);
+}
+
+/* 锁定图标 */
+.lock-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 16px;
+  opacity: 0.5;
+}
+
+/* 星星装饰 */
+.card-star {
+  position: absolute;
+  font-size: 12px;
+  opacity: 0.6;
+  animation: floatStar 3s ease-in-out infinite;
+}
+@keyframes floatStar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* 语音设置按钮 */
+.voice-settings-btn {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 70px);
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  -webkit-tap-highlight-color: transparent;
+}
+.voice-settings-btn.muted { opacity: 0.5; }
+
+.voice-settings-panel {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 114px);
+  right: 12px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 101;
+  min-width: 200px;
+  border: 1px solid rgba(255,255,255,0.15);
+  display: none;
+}
+.voice-settings-panel.show { display: block; }
+.voice-settings-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.voice-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.voice-setting-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+.voice-toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  padding: 0;
+}
+.voice-toggle.on { background: #4ECDC4; }
+.voice-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.2s;
+}
+.voice-toggle.on::after { left: 22px; }
+    /* === 引导手势动画系统 === */
+    .gesture-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gesture-hand {
+      position: absolute;
+      font-size: 80px;
+      opacity: 0;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6)) drop-shadow(0 0 12px rgba(255,255,255,0.5));
+      pointer-events: none;
+      z-index: 9999;
+    }
+    @keyframes gestureTap {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1.8); }
+      15% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      40% { opacity: 1; transform: translate(-50%,-50%) scale(0.95); }
+      60% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      80% { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.3); }
+    }
+    .gesture-tap-anim { animation: gestureTap 1.8s ease-in-out infinite; }
+    @keyframes gestureRipple {
+      0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; }
+      100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+    }
+    .gesture-ripple {
+      position: absolute;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,200,60,0.9);
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .gesture-ripple-anim { animation: gestureRipple 1.8s ease-out infinite; }
+    /* === 小星星向导 === */
+    .star-guide-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9998;
+      pointer-events: none;
+      transition: transform 0.3s;
+    }
+    .star-guide-container.hidden {
+      opacity: 0;
+      transform: scale(0.5);
+      pointer-events: none;
+    }
+    .star-guide {
+      width: 60px; height: 60px;
+      background: radial-gradient(circle at 30% 30%, #FFF4B8, #FFD700);
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(255,215,0,0.6), 0 0 60px rgba(255,215,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      animation: starBounce 2s ease-in-out infinite;
+      position: relative;
+    }
+    .star-guide::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255,215,0,0.4);
+      animation: starRotate 8s linear infinite;
+    }
+    @keyframes starBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes starRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .star-guide-bubble {
+      position: absolute;
+      bottom: 70px;
+      right: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 14px 14px 4px 14px;
+      font-size: 14px;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      border: 1px solid rgba(255,215,0,0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      max-width: 220px;
+      white-space: normal;
+      line-height: 1.4;
+    }
+    .star-guide-bubble.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .star-guide-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      right: 20px;
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid rgba(0,0,0,0.85);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 星空背景 -->
+  <div class="stars-bg" id="stars-bg"></div>
+
+  <!-- 导航栏 -->
+  <header class="header">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <h1 class="header-title">✨ 星光贴纸簿 ✨</h1>
+    <div class="sticker-count" id="sticker-count">0/7</div>
+  </header>
+
+  <!-- 语音设置 -->
+  <button class="voice-settings-btn" id="voice-settings-btn" onclick="toggleVoiceSettings()">🔊</button>
+  <div class="voice-settings-panel" id="voice-settings-panel">
+    <div class="voice-settings-title">语音设置</div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">语音引导</span>
+      <button class="voice-toggle on" id="voice-toggle" onclick="toggleVoiceGuide()"></button>
+    </div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">手势指引</span>
+      <button id="gesture-toggle" class="voice-toggle on" aria-label="手势指引开关"></button>
+    </div>
+    <div class="voice-setting-row" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 12px;">
+      <span class="voice-setting-label">重置手势演示</span>
+      <button id="reset-gesture-btn" style="background: rgba(255,200,60,0.3); border: 1px solid rgba(255,200,60,0.5); color: #FFC048; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer;">重置</button>
+    </div>
+  </div>
+
+  <!-- 内容区域 -->
+  <main class="main-content">
+    <!-- 成就徽章 -->
+    <div class="achievement-badge" id="achievement-badge">
+      <div class="badge-icon">🏆</div>
+      <div class="badge-title" id="badge-title">收集贴纸</div>
+      <div class="badge-desc" id="badge-desc">解救所有小动物获得"贴纸大师"徽章</div>
+    </div>
+
+    <!-- 贴纸网格 -->
+    <div class="sticker-grid" id="sticker-grid">
+      <!-- 贴纸将通过JS动态生成 -->
+    </div>
+  </main>
+
+  <script>
+// 贴纸数据
+const STICKERS = [
+  { id: 'parrot', name: '小鹦鹉', emoji: '🦜', voice: '你好！谢谢你救了我！', island: 'echoValley', type: 'animal' },
+  { id: 'owl', name: '猫头鹰', emoji: '🦉', voice: '咕咕~谢谢你！', island: 'echoValley', type: 'animal' },
+  { id: 'frog', name: '小青蛙', emoji: '🐸', voice: '呱呱！谢谢你！', island: 'echoValley', type: 'animal' },
+  { id: 'clownfish', name: '小丑鱼', emoji: '🐠', voice: '啵啵！谢谢你！', island: 'bubbleBay', type: 'animal' },
+  { id: 'octopus', name: '小章鱼', emoji: '🐙', voice: '咕噜咕噜！谢谢你！', island: 'bubbleBay', type: 'animal' },
+  { id: 'turtle', name: '小海龟', emoji: '🐢', voice: '谢谢！', island: 'bubbleBay', type: 'animal' },
+  { id: 'monkey', name: '小猴子', emoji: '🐒', voice: 'Jump!谢谢你！', island: 'shadowJungle', type: 'animal' },
+];
+
+// 游戏奖励贴纸
+const REWARD_STICKERS = [
+  { id: 'star1', name: '闪亮星星', emoji: '⭐', voice: '星星星星！', type: 'reward' },
+  { id: 'star2', name: '梦幻星光', emoji: '✨', voice: '好漂亮的星光！', type: 'reward' },
+  { id: 'star3', name: '金色星星', emoji: '🌟', voice: '金色星星！', type: 'reward' },
+  { id: 'crown', name: '皇冠', emoji: '👑', voice: '皇冠好漂亮！', type: 'reward' },
+  { id: 'rainbow', name: '彩虹', emoji: '🌈', voice: '彩虹！', type: 'reward' },
+  { id: 'heart', name: '爱心', emoji: '💖', voice: '爱心！', type: 'reward' },
+];
+
+const DB_KEY = 'starCarnivalDB';
+const PROGRESS_KEY_PREFIX = 'starCarnival_progress_';
+
+// 初始化星空背景
+function initStars() {
+  const container = document.getElementById('stars-bg');
+  for (let i = 0; i < 50; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.width = Math.random() * 3 + 1 + 'px';
+    star.style.height = star.style.width;
+    star.style.animationDelay = Math.random() * 2 + 's';
+    star.style.animationDuration = (Math.random() * 2 + 1) + 's';
+    container.appendChild(star);
+  }
+}
+
+// 获取贴纸进度
+function getStickersProgress() {
+  const db = JSON.parse(localStorage.getItem(DB_KEY) || '{}');
+  const progKey = PROGRESS_KEY_PREFIX + (db.currentPlayerId || 'default');
+  const progress = JSON.parse(localStorage.getItem(progKey) || '{}');
+  
+  const stickers = {};
+  [...STICKERS, ...REWARD_STICKERS].forEach(s => {
+    stickers[s.id] = { unlocked: false, ...s };
+  });
+  
+  if (progress.unlockedStickers) {
+    progress.unlockedStickers.forEach(id => {
+      if (stickers[id]) {
+        stickers[id].unlocked = true;
+      }
+    });
+  }
+  
+  return stickers;
+}
+
+// 渲染贴纸
+function renderStickers() {
+  const grid = document.getElementById('sticker-grid');
+  const stickers = getStickersProgress();
+  let unlockedCount = 0;
+  const totalStickers = STICKERS.length + REWARD_STICKERS.length;
+  
+  grid.innerHTML = '';
+  
+  const addStickerCard = (sticker) => {
+    const isUnlocked = stickers[sticker.id].unlocked;
+    if (isUnlocked) unlockedCount++;
+    
+    const card = document.createElement('div');
+    card.className = `sticker-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+    card.onclick = () => handleStickerClick(sticker, isUnlocked);
+    
+    const star1 = document.createElement('div');
+    star1.className = 'card-star';
+    star1.textContent = '⭐';
+    star1.style.top = (Math.random() * 80 + 10) + '%';
+    star1.style.left = (Math.random() * 80 + 10) + '%';
+    star1.style.animationDelay = Math.random() * 3 + 's';
+    
+    card.innerHTML = `
+      ${isUnlocked ? '' : '<span class="lock-icon">🔒</span>'}
+      <div class="sticker-emoji">${isUnlocked ? sticker.emoji : '❓'}</div>
+      <div class="sticker-name">${sticker.name}</div>
+    `;
+    
+    if (isUnlocked) {
+      card.appendChild(star1);
+    }
+    
+    grid.appendChild(card);
+  };
+  
+  STICKERS.forEach(addStickerCard);
+  
+  if (REWARD_STICKERS.some(s => stickers[s.id].unlocked)) {
+    const divider = document.createElement('div');
+    divider.className = 'col-span-full text-center py-4';
+    divider.innerHTML = '<div class="inline-block px-4 py-1 rounded-full bg-white/10 text-white/50 text-xs font-bold">游戏奖励</div>';
+    grid.appendChild(divider);
+    
+    REWARD_STICKERS.forEach(addStickerCard);
+  }
+  
+  document.getElementById('sticker-count').textContent = unlockedCount + '/' + totalStickers;
+  
+  const badge = document.getElementById('achievement-badge');
+  const badgeTitle = document.getElementById('badge-title');
+  const badgeDesc = document.getElementById('badge-desc');
+  
+  if (unlockedCount >= STICKERS.length) {
+    badge.classList.add('unlocked');
+    badgeTitle.textContent = '🎉 贴纸大师！';
+    badgeDesc.textContent = `你已经收集了 ${unlockedCount} 张贴纸！太棒了！`;
+  } else {
+    badge.classList.remove('unlocked');
+    badgeTitle.textContent = '收集贴纸';
+    badgeDesc.textContent = `还需要收集 ${STICKERS.length - unlockedCount} 张贴纸解锁成就`;
+  }
+}
+
+// 点击贴纸
+function handleStickerClick(sticker, isUnlocked) {
+  if (!isUnlocked) {
+    if (window.VoiceGuide) {
+      window.VoiceGuide.speak("还没有解锁这张贴纸哦~");
+    }
+    return;
+  }
+  
+  // 播放语音
+  if (window.VoiceGuide) {
+    window.VoiceGuide.speak(sticker.voice);
+  }
+  
+  // 动画效果
+  const card = document.activeElement || document.querySelector(`[onclick*="${sticker.id}"]`);
+  if (card) {
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = 'bounce 0.5s ease-in-out';
+  }
+}
+
+// 返回地图
+function goBack() {
+  window.location.href = 'world-map-v2.html';
+}
+
+// 语音设置
+// ========== VoiceGuide 系统 ==========
+(function() {
+  const STORAGE_KEY = 'starlight_voice_guide';
+  const synth = window.speechSynthesis || null;
+
+  function isVoiceGuideEnabled() {
+    const v = localStorage.getItem(STORAGE_KEY);
+    return v !== 'false';
+  }
+
+  function setVoiceGuideEnabled(enabled) {
+    localStorage.setItem(STORAGE_KEY, enabled ? 'true' : 'false');
+    updateBtnIcon();
+    if (enabled) {
+      speakGuide('语音引导已开启');
+    }
+  }
+
+  function updateBtnIcon() {
+    const btn = document.getElementById('voice-settings-btn');
+    if (!btn) return;
+    if (isVoiceGuideEnabled()) {
+      btn.textContent = '🔊';
+      btn.classList.remove('muted');
+    } else {
+      btn.textContent = '🔇';
+      btn.classList.add('muted');
+    }
+  }
+
+  let currentUtterance = null;
+
+  function stopSpeak() {
+    if (synth && synth.speaking) {
+      synth.cancel();
+    }
+    currentUtterance = null;
+  }
+
+  function speakGuide(text, options) {
+    if (!isVoiceGuideEnabled()) return;
+    if (!synth) return;
+    if (!text || !text.trim()) return;
+
+    stopSpeak();
+
+    const opts = options || {};
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'zh-CN';
+    utter.rate = opts.rate || 0.9;
+    utter.pitch = opts.pitch || 1.3;
+    utter.volume = opts.volume || 1;
+
+    const voices = synth.getVoices();
+    const zhVoice = voices.find(function(v) {
+      return v.lang && v.lang.toLowerCase().indexOf('zh') === 0;
+    });
+    if (zhVoice) utter.voice = zhVoice;
+
+    currentUtterance = utter;
+    synth.speak(utter);
+  }
+
+  function speakEn(text, options) {
+    if (!isVoiceGuideEnabled()) return;
+    if (!synth) return;
+    if (!text || !text.trim()) return;
+
+    stopSpeak();
+
+    const opts = options || {};
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = opts.rate || 0.8;
+    utter.pitch = opts.pitch || 1.2;
+    utter.volume = opts.volume || 1;
+
+    currentUtterance = utter;
+    synth.speak(utter);
+  }
+
+  const GESTURE_KEY = 'starlight_gesture_enabled';
+
+  function isGestureGuideEnabled() {
+    const v = localStorage.getItem(GESTURE_KEY);
+    return v !== 'false';
+  }
+
+  function setGestureGuideEnabled(enabled) {
+    localStorage.setItem(GESTURE_KEY, enabled ? 'true' : 'false');
+    if (window.GestureGuide) {
+      window.GestureGuide.setEnabled(enabled);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('voice-settings-btn');
+    const panel = document.getElementById('voice-settings-panel');
+    const toggle = document.getElementById('voice-toggle');
+    const gestureToggle = document.getElementById('gesture-toggle');
+    const resetBtn = document.getElementById('reset-gesture-btn');
+
+    updateBtnIcon();
+    if (isVoiceGuideEnabled()) {
+      if (toggle) toggle.classList.add('on');
+    } else {
+      if (toggle) toggle.classList.remove('on');
+    }
+
+    if (isGestureGuideEnabled()) {
+      if (gestureToggle) gestureToggle.classList.add('on');
+    } else {
+      if (gestureToggle) gestureToggle.classList.remove('on');
+    }
+
+    if (btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (panel) panel.classList.toggle('show');
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      if (panel && !panel.contains(e.target) && e.target !== btn) {
+        panel.classList.remove('show');
+      }
+    });
+
+    if (toggle) {
+      toggle.addEventListener('click', function() {
+        const enabled = !isVoiceGuideEnabled();
+        setVoiceGuideEnabled(enabled);
+        if (enabled) {
+          toggle.classList.add('on');
+        } else {
+          toggle.classList.remove('on');
+        }
+      });
+    }
+
+    if (gestureToggle) {
+      gestureToggle.addEventListener('click', function() {
+        const enabled = !isGestureGuideEnabled();
+        setGestureGuideEnabled(enabled);
+        if (enabled) {
+          gestureToggle.classList.add('on');
+        } else {
+          gestureToggle.classList.remove('on');
+        }
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function() {
+        try {
+          localStorage.removeItem('starlight_gesture_seen');
+          alert('手势演示已重置！刷新页面即可重新看到引导动画。');
+        } catch(e) {}
+      });
+    }
+
+    if (synth) {
+      synth.getVoices();
+      window.addEventListener('voiceschanged', function() {
+        synth.getVoices();
+      });
+    }
+  });
+
+  window.VoiceGuide = {
+    speak: speakGuide,
+    speakEn: speakEn,
+    stop: stopSpeak,
+    isEnabled: isVoiceGuideEnabled
+  };
+})();
+
+// 兼容旧版 localStorage key
+(function migrateVoiceSetting() {
+  const oldKey = 'voiceGuideEnabled';
+  const newKey = 'starlight_voice_guide';
+  const oldVal = localStorage.getItem(oldKey);
+  if (oldVal !== null && localStorage.getItem(newKey) === null) {
+    localStorage.setItem(newKey, oldVal);
+  }
+})();
+
+function toggleVoiceSettings() {
+  const panel = document.getElementById('voice-settings-panel');
+  if (panel) panel.classList.toggle('show');
+}
+
+function toggleVoiceGuide() {
+  const toggle = document.getElementById('voice-toggle');
+  const btn = document.getElementById('voice-settings-btn');
+  const enabled = !(window.VoiceGuide && window.VoiceGuide.isEnabled && window.VoiceGuide.isEnabled());
+  localStorage.setItem('starlight_voice_guide', enabled ? 'true' : 'false');
+  if (toggle) toggle.classList.toggle('on', enabled);
+  if (btn) {
+    btn.textContent = enabled ? '🔊' : '🔇';
+    btn.classList.toggle('muted', !enabled);
+  }
+  if (enabled && window.VoiceGuide && window.VoiceGuide.speak) {
+    window.VoiceGuide.speak('语音引导已开启');
+  }
+}
+
+function toggleGestureGuide() {
+  const toggle = document.getElementById('gesture-toggle');
+  const enabled = localStorage.getItem('starlight_gesture_enabled') !== 'false';
+  const newEnabled = !enabled;
+  localStorage.setItem('starlight_gesture_enabled', newEnabled ? 'true' : 'false');
+  if (window.GestureGuide) {
+    window.GestureGuide.setEnabled(newEnabled);
+  }
+  if (toggle) {
+    if (newEnabled) {
+      toggle.classList.add('on');
+    } else {
+      toggle.classList.remove('on');
+    }
+  }
+}
+
+function resetGesture() {
+  try {
+    localStorage.removeItem('starlight_gesture_seen');
+    alert('手势演示已重置！刷新页面即可重新看到引导动画。');
+  } catch(e) {}
+}
+
+// 初始化
+window.addEventListener('load', () => {
+  initStars();
+  renderStickers();
+});
+
+// 动画样式
+const style = document.createElement('style');
+style.textContent = `
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(0.9); }
+  50% { transform: scale(1.1); }
+  75% { transform: scale(0.95); }
+}
+`;
+document.head.appendChild(style);
+  </script>
+<script>
+// 引导手势动画系统
+window.GestureGuide = {
+  STORAGE_KEY: 'starlight_gesture_seen',
+  GESTURE_ENABLE_KEY: 'starlight_gesture_enabled',
+
+  _enabled: true,
+
+  isEnabled: function() {
+    var v = localStorage.getItem(this.GESTURE_ENABLE_KEY);
+    return v !== 'false';
+  },
+
+  setEnabled: function(enabled) {
+    this._enabled = enabled;
+    localStorage.setItem(this.GESTURE_ENABLE_KEY, enabled ? 'true' : 'false');
+  },
+
+  hasSeen: function(id) {
+    try {
+      var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+      return seen[id] === true;
+    } catch(e) { return false; }
+  },
+  markSeen: function(id) {
+    try {
+      var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+      seen[id] = true;
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(seen));
+    } catch(e) {}
+  },
+  remove: function(overlay) {
+    if (overlay && overlay.parentNode) {
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.3s';
+      setTimeout(function() {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }, 300);
+    }
+  },
+  showTap: function(targetEl, options) {
+    if (!this.isEnabled()) return null;
+
+    var opts = options || {};
+    var id = opts.id || 'tap_' + Date.now();
+    var once = opts.once !== false;
+    var duration = opts.duration || 3000;
+    if (once && this.hasSeen(id)) return null;
+    var rect = targetEl.getBoundingClientRect();
+    var overlay = document.createElement('div');
+    overlay.className = 'gesture-overlay';
+    var hand = document.createElement('div');
+    hand.className = 'gesture-hand gesture-tap-anim';
+    hand.textContent = '👆';
+    hand.style.left = (rect.left + rect.width / 2) + 'px';
+    hand.style.top = (rect.top + rect.height / 2) + 'px';
+    hand.style.fontSize = opts.size || '80px';
+    overlay.appendChild(hand);
+    var ripple = document.createElement('div');
+    ripple.className = 'gesture-ripple gesture-ripple-anim';
+    ripple.style.left = (rect.left + rect.width / 2) + 'px';
+    ripple.style.top = (rect.top + rect.height / 2) + 'px';
+    overlay.appendChild(ripple);
+    document.body.appendChild(overlay);
+    var self = this;
+    var timer = setTimeout(function() {
+      self.remove(overlay);
+      if (once) self.markSeen(id);
+    }, duration);
+    overlay._timer = timer;
+    return overlay;
+  }
+};
+</script>
+
+<script>
+// 小星星向导
+window.StarGuide = {
+  container: null,
+  star: null,
+  bubble: null,
+  steps: [],
+  currentStep: 0,
+  idleTimer: null,
+  init: function(steps) {
+    this.steps = steps || [];
+    this.currentStep = 0;
+    this.createDOM();
+    this.startIdleWatch();
+  },
+  createDOM: function() {
+    if (this.container) return;
+    this.container = document.createElement('div');
+    this.container.className = 'star-guide-container hidden';
+    this.container.id = 'star-guide';
+    this.star = document.createElement('div');
+    this.star.className = 'star-guide';
+    this.star.textContent = '⭐';
+    this.bubble = document.createElement('div');
+    this.bubble.className = 'star-guide-bubble';
+    this.container.appendChild(this.bubble);
+    this.container.appendChild(this.star);
+    document.body.appendChild(this.container);
+  },
+  show: function(text, targetSelector) {
+    if (!this.container) this.createDOM();
+    this.container.classList.remove('hidden');
+    this.bubble.textContent = text;
+    this.bubble.classList.add('show');
+    if (targetSelector) {
+      var target = document.querySelector(targetSelector);
+      if (target) {
+        var rect = target.getBoundingClientRect();
+        this.container.style.position = 'fixed';
+        this.container.style.bottom = 'auto';
+        this.container.style.right = 'auto';
+        this.container.style.left = (rect.left + rect.width/2 - 30) + 'px';
+        this.container.style.top = (rect.top + rect.height + 12) + 'px';
+      }
+    } else {
+      this.container.style.position = 'fixed';
+      this.container.style.bottom = '24px';
+      this.container.style.right = '24px';
+      this.container.style.left = 'auto';
+      this.container.style.top = 'auto';
+    }
+    clearTimeout(this._hideTimer);
+    this._hideTimer = setTimeout(() => { this.hide(); }, 5000);
+  },
+  hide: function() {
+    if (!this.container) return;
+    this.bubble.classList.remove('show');
+    this.container.classList.add('hidden');
+  },
+  startIdleWatch: function() {
+    var self = this;
+    var lastActivity = Date.now();
+    function onActivity() { lastActivity = Date.now(); }
+    document.addEventListener('click', onActivity);
+    document.addEventListener('touchstart', onActivity);
+    document.addEventListener('pointerdown', onActivity);
+    function checkIdle() {
+      if (Date.now() - lastActivity > 3000 && self.currentStep < self.steps.length) {
+        var step = self.steps[self.currentStep];
+        if (!step.condition || step.condition()) {
+          self.show(step.text, step.target);
+          if (step.speak && window.VoiceGuide) window.VoiceGuide.speak(step.speak);
+        }
+      }
+    }
+    self.idleTimer = setInterval(checkIdle, 1000);
+  },
+  nextStep: function() {
+    this.currentStep++;
+    this.hide();
+  }
+};
+
+// 页面专属StarGuide配置
+(function() {
+  function initStarGuide() {
+    if (window.StarGuide) {
+      window.StarGuide.init([
+        { target: '.sticker-item', text: '点击贴纸，看看动物朋友会说什么！', speak: '点击贴纸，看看动物朋友会说什么！' }
+      ]);
+    } else {
+      setTimeout(initStarGuide, 300);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(initStarGuide, 500); });
+  } else {
+    setTimeout(initStarGuide, 500);
+  }
+})();
+
+// 页面专属手势引导
+(function() {
+  function waitAndShow() {
+    if (window.GestureGuide) {
+      var btn = document.querySelector('.sticker-item');
+      if (btn) {
+        setTimeout(function() {
+          GestureGuide.showTap(btn, { id: 'sticker_book_item', duration: 4000 });
+        }, 300);
+      }
+    } else {
+      setTimeout(waitAndShow, 200);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(waitAndShow, 500); });
+  } else {
+    setTimeout(waitAndShow, 500);
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>星光嘉年华 - 选择小探险家</title>
+    <style>
+:root {
+  --brand-night-sky: #0B0C10;
+  --brand-aurora: #45A29E;
+  --brand-starlight: #C5C6C7;
+  --brand-gold: #FDCA6E;
+  --font-kids: 'ZCOOL KuaiLe', 'YouYuan', '幼圆', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+    
+    /* === 语音引导设置面板 === */
+    .voice-settings-btn {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 56px);
+      right: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s;
+    }
+    .voice-settings-btn:active { transform: scale(0.9); }
+    .voice-settings-btn.muted { opacity: 0.5; }
+    
+    .voice-settings-panel {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 100px);
+      right: 12px;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 16px;
+      z-index: 101;
+      min-width: 200px;
+      border: 1px solid rgba(255,255,255,0.15);
+      display: none;
+      animation: panelIn 0.2s ease-out;
+    }
+    .voice-settings-panel.show { display: block; }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .voice-settings-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .voice-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+    .voice-setting-label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+    }
+    .voice-toggle {
+      width: 44px;
+      height: 24px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      padding: 0;
+    }
+    .voice-toggle.on { background: #4ECDC4; }
+    .voice-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.2s;
+    }
+    .voice-toggle.on::after { left: 22px; }
+
+  
+    /* === 引导手势动画系统 === */
+    .gesture-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gesture-hand {
+      position: absolute;
+      font-size: 80px;
+      opacity: 0;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6)) drop-shadow(0 0 12px rgba(255,255,255,0.5));
+      pointer-events: none;
+      z-index: 9999;
+    }
+    /* 点击手势 - 在目标位置脉冲 */
+    @keyframes gestureTap {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1.8); }
+      15% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      40% { opacity: 1; transform: translate(-50%,-50%) scale(0.95); }
+      60% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      80% { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.3); }
+    }
+    .gesture-tap-anim {
+      animation: gestureTap 1.8s ease-in-out infinite;
+    }
+    /* 拖拽手势 - 从A拖到B */
+    @keyframes gestureDragX {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1); left: var(--drag-from); }
+      10% { opacity: 1; transform: translate(-50%,-50%) scale(1); left: var(--drag-from); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(1); left: var(--drag-to); }
+      70% { opacity: 1; transform: translate(-50%,-50%) scale(0.9); left: var(--drag-to); }
+      80% { opacity: 0.8; transform: translate(-50%,-50%) scale(1); left: var(--drag-to); }
+      90% { opacity: 0; transform: translate(-50%,-50%) scale(1); left: var(--drag-to); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1); left: var(--drag-from); }
+    }
+    /* 摩擦手势 - 两只手指来回搓 */
+    @keyframes gestureRubLeft {
+      0%, 100% { transform: translateX(-22px); }
+      50% { transform: translateX(22px); }
+    }
+    @keyframes gestureRubRight {
+      0%, 100% { transform: translateX(22px); }
+      50% { transform: translateX(-22px); }
+    }
+    .gesture-rub-left {
+      animation: gestureRubLeft 0.6s ease-in-out infinite;
+    }
+    .gesture-rub-right {
+      animation: gestureRubRight 0.6s ease-in-out infinite;
+    }
+    /* 按住手势 - 手指按下不动 */
+    @keyframes gesturePress {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1.5); }
+      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(0.9); }
+      80% { opacity: 0.9; transform: translate(-50%,-50%) scale(0.95); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1); }
+    }
+    .gesture-press-anim {
+      animation: gesturePress 2s ease-in-out infinite;
+    }
+    /* 点击涟漪效果 */
+    @keyframes gestureRipple {
+      0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; }
+      100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+    }
+    .gesture-ripple {
+      position: absolute;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,200,60,0.9);
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .gesture-ripple-anim {
+      animation: gestureRipple 1.8s ease-out infinite;
+    }
+    /* 滑动方向箭头 */
+    @keyframes gestureSlideUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      20% { opacity: 1; }
+      80% { opacity: 1; transform: translateY(-40px); }
+      100% { opacity: 0; transform: translateY(-60px); }
+    }
+    @keyframes gestureSlideLeft {
+      0% { opacity: 0; transform: translateX(20px); }
+      20% { opacity: 1; }
+      80% { opacity: 1; transform: translateX(-40px); }
+      100% { opacity: 0; transform: translateX(-60px); }
+    }
+      80% { opacity: 0.8; transform: translateX(-40px); }
+      100% { opacity: 0; transform: translateX(-60px); }
+    }
+
+  
+    /* === 小星星向导 === */
+    .star-guide-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9998;
+      pointer-events: none;
+      transition: transform 0.3s;
+    }
+    .star-guide-container.hidden {
+      opacity: 0;
+      transform: scale(0.5);
+      pointer-events: none;
+    }
+    .star-guide {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      cursor: pointer;
+      filter: drop-shadow(0 4px 12px rgba(242,201,76,0.5));
+      animation: starPulse 2s ease-in-out infinite;
+      pointer-events: auto;
+      transition: transform 0.2s;
+    }
+    .star-guide:hover {
+      transform: scale(1.15);
+    }
+    .star-guide:active {
+      transform: scale(0.95);
+    }
+    @keyframes starPulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(242,201,76,0.5)); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 6px 20px rgba(242,201,76,0.7)); }
+    }
+    .star-guide-balloon {
+      position: absolute;
+      bottom: 50px;
+      right: 0;
+      background: rgba(255,255,255,0.95);
+      color: #333;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      white-space: nowrap;
+      max-width: 200px;
+      opacity: 0;
+      transform: translateY(10px) scale(0.9);
+      transition: all 0.3s ease-out;
+      pointer-events: none;
+    }
+    .star-guide-balloon.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .star-guide-balloon::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      right: 14px;
+      width: 16px;
+      height: 16px;
+      background: rgba(255,255,255,0.95);
+      transform: rotate(45deg);
+    }
+    /* 飞行路径动画 */
+    .star-guide-flying {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      font-size: 44px;
+      filter: drop-shadow(0 6px 20px rgba(242,201,76,0.7));
+    }
+    @keyframes starFly {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    /* 目标高亮光环 */
+    .star-guide-target-glow {
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid #F2C94C;
+      animation: targetGlow 1.5s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 9997;
+    }
+    @keyframes targetGlow {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+
+  </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <style>
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+      body { background: #0B0C10; color: #C5C6C7; font-family: 'Fredoka', 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif; overflow: hidden; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; min-height: 100dvh; }
+      .no-select { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+      .glass-card { background: rgba(20,24,35,0.65); backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); }
+      .aurora-particle { position: absolute; border-radius: 50%; animation: aurora-drift 8s ease-in-out infinite; pointer-events: none; }
+      @keyframes aurora-drift {
+        0%   { transform: translateY(0) translateX(0); opacity: 0.5; }
+        25%  { transform: translateY(-15vh) translateX(10px); opacity: 0.4; }
+        50%  { transform: translateY(-25vh) translateX(-8px); opacity: 0.7; }
+        75%  { transform: translateY(-10vh) translateX(12px); opacity: 0.35; }
+        100% { transform: translateY(0) translateX(0); opacity: 0.5; }
+      }
+      .star-field { position: absolute; inset: 0; pointer-events: none; }
+      .star { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; animation: twinkle 3s ease-in-out infinite; }
+      @keyframes twinkle {
+        0%,100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.4); }
+      }
+      .card-scroll { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .card-scroll::-webkit-scrollbar { display: none; }
+      .player-card { scroll-snap-align: center; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s; cursor: pointer; }
+      .player-card:active { transform: scale(0.93) !important; }
+      .player-card.selected { transform: scale(1.12); box-shadow: 0 0 40px rgba(253,202,110,0.75), 0 0 80px rgba(253,202,110,0.35), inset 0 0 20px rgba(253,202,110,0.2); border-color: #FDCA6E !important; }
+      .player-card.selected .avatar-ring { border-color: #FDCA6E !important; box-shadow: 0 0 30px rgba(253,202,110,0.6), inset 0 0 15px rgba(253,202,110,0.15); }
+      .player-card.selected .name-label { color: #FDCA6E !important; text-shadow: 0 0 12px rgba(253,202,110,0.6); }
+      .avatar-btn { transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
+      .avatar-btn:active { transform: scale(0.9); }
+      .avatar-btn.chosen { box-shadow: 0 0 0 3px #FDCA6E, 0 0 18px rgba(253,202,110,0.5); transform: scale(1.1); border-color: #FDCA6E !important; }
+      .breathe-glow { animation: breathe 2s ease-in-out infinite; }
+      @keyframes breathe {
+        0%,100% { box-shadow: 0 0 20px rgba(78,205,196,0.4), 0 0 40px rgba(78,205,196,0.2), inset 0 0 10px rgba(255,255,255,0.1); transform: scale(1); }
+        50% { box-shadow: 0 0 30px rgba(78,205,196,0.7), 0 0 60px rgba(78,205,196,0.35), inset 0 0 14px rgba(255,255,255,0.2); transform: scale(1.06); }
+      }
+      .modal-pop { animation: modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+      @keyframes modalPop {
+        0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      }
+      .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .slide-up { animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .island-silhouette { position: absolute; bottom: 0; border-radius: 50% 50% 0 0; filter: blur(14px); pointer-events: none; }
+      .jump-anim { animation: jumpPulse 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+      @keyframes jumpPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+      .badge-glow { animation: badgeGlow 2s ease-in-out infinite; }
+      @keyframes badgeGlow {
+        0%,100% { box-shadow: 0 0 15px rgba(255,215,0,0.6); transform: scale(1); }
+        50% { box-shadow: 0 0 25px rgba(255,215,0,0.9), 0 0 40px rgba(255,215,0,0.4); transform: scale(1.1); }
+      }
+      .modal-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; }
+      .modal-backdrop.open { display: flex; align-items: center; justify-content: center; }
+      .modal-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.6); opacity: 0; width: 90%; max-width: 340px; }
+      .modal-card.open { animation: modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+      .parent-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .parent-row:last-child { border-bottom: none; }
+      .mini-btn { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; white-space: nowrap; }
+      @media (prefers-reduced-motion: reduce) {
+        .aurora-particle, .star, .breathe-glow { animation: none !important; }
+      }
+    </style>
+</head>
+<body class="relative">
+
+  <!-- ===== BACKGROUND LAYER ===== -->
+  <div class="fixed inset-0 z-0">
+    <div class="absolute inset-0" style="background: radial-gradient(ellipse at 50% 30%, #1A2332 0%, #0F1419 40%, #0B0C10 100%);"></div>
+    <div class="absolute inset-0" style="background: radial-gradient(ellipse at center, transparent 40%, #0B0C10 100%);"></div>
+    <div class="star-field" id="star-field"></div>
+    <div class="absolute inset-0 pointer-events-none" id="aurora-layer"></div>
+    <div class="island-silhouette" style="left:5%; width:28%; height:18vh; min-height:80px; background:rgba(69,162,158,0.10);"></div>
+    <div class="island-silhouette" style="left:36%; width:32%; height:22vh; min-height:100px; background:rgba(197,198,199,0.08);"></div>
+    <div class="island-silhouette" style="right:5%; width:26%; height:15vh; min-height:70px; background:rgba(69,162,158,0.10);"></div>
+    <div class="absolute inset-0 pointer-events-none" style="background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(69,162,158,0.08), transparent 70%),
+      radial-gradient(ellipse 50% 30% at 80% 30%, rgba(102,187,106,0.06), transparent 70%),
+      radial-gradient(ellipse 40% 25% at 50% 10%, rgba(253,202,110,0.04), transparent 70%);
+    "></div>
+  </div>
+
+  <!-- ===== BACK BUTTON ===== -->
+  <button data-dom-id="btn-back-to-home" id="btn-back"
+          class="fixed z-50 inline-flex items-center justify-center"
+          style="top: calc(env(safe-area-inset-top, 0px) + 16px); left: 16px; width: 44px; height: 44px; border-radius: 50%; background: rgba(20,24,35,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(197,198,199,0.2); color: #C5C6C7;"
+          aria-label="返回首页">
+    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+  </button>
+
+  <!-- ===== TITLE AREA ===== -->
+  <header class="relative z-10 pt-[calc(env(safe-area-inset-top,0px)+60px)] px-6 slide-up">
+    <div class="glass-card inline-block px-6 py-4" style="max-width: 100%;">
+      <h1 class="m-0 font-bold whitespace-nowrap leading-tight"
+          style="font-family: 'ZCOOL KuaiLe', 'YouYuan', '幼圆', sans-serif; font-size: clamp(1.6rem, 6vw, 2.6rem); color: #fff; text-shadow: 0 0 20px rgba(253,202,110,0.4), 0 0 40px rgba(253,202,110,0.2), 0 2px 8px rgba(0,0,0,0.5); letter-spacing: 0.02em;">
+        ✨ 今天谁是小探险家？
+      </h1>
+    </div>
+  </header>
+
+  <!-- ===== PLAYER CARDS ===== -->
+  <main class="relative z-10 flex flex-col items-center justify-center" style="height: calc(100dvh - 220px); min-height: 380px;">
+    <div id="player-scroll" data-dom-id="btn-enter-world" class="card-scroll flex items-center gap-5 px-[50%] overflow-x-auto overflow-y-hidden w-full py-6"
+         style="scroll-padding: 0 50%;">
+      <!-- Cards injected by JS -->
+    </div>
+    <p id="empty-hint" class="text-center text-sm mt-4 px-4 fade-in hidden" style="color: rgba(197,198,199,0.6); font-family: inherit;">还没有小探险家~ 点➕创建一个吧！</p>
+    <p id="select-hint" class="text-center text-sm mt-4 px-4 fade-in" style="color: rgba(197,198,199,0.6); font-family: inherit;">点一下你的头像，开始今天的冒险~</p>
+  </main>
+
+  <!-- ===== PARENT CONTROL ===== -->
+  <button id="parent-btn" class="fixed z-40"
+          style="bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: 12px; background: transparent; border: none; color: rgba(197,198,199,0.3); font-size: 11px; cursor: pointer; padding: 6px 10px; font-family: inherit; transition: color 0.2s;"
+          aria-label="家长管理">
+    👨‍👩‍👧 家长管理
+  </button>
+
+  <!-- ===== NEW PLAYER MODAL ===== -->
+  <div id="new-player-modal" class="modal-backdrop">
+    <div id="new-player-card" class="modal-card glass-card p-6">
+      <h2 class="text-xl font-bold text-white m-0 mb-4 text-center" style="font-family: 'ZCOOL KuaiLe', sans-serif; text-shadow: 0 0 12px rgba(253,202,110,0.4);">
+        🎨 创建新朋友
+      </h2>
+      <label class="block text-xs mb-1.5" style="color: rgba(197,198,199,0.7);">你的名字（最多4个字）</label>
+      <input id="player-name-input" type="text" maxlength="4" placeholder="输入小名..."
+             class="w-full mb-4 px-4 py-3 rounded-2xl text-base"
+             style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(197,198,199,0.2); color: #fff; outline: none; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s;">
+      <label class="block text-xs mb-2" style="color: rgba(197,198,199,0.7);">选一个动物头像</label>
+      <div id="avatar-row" class="flex gap-2 justify-center mb-5 overflow-x-auto pb-1"></div>
+      <div class="flex gap-3">
+        <button id="cancel-new" class="flex-1 py-3 rounded-full text-sm font-bold cursor-pointer"
+                style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(197,198,199,0.2); color: #C5C6C7; font-family: inherit;">
+          取消
+        </button>
+        <button id="confirm-new" class="flex-1 py-3 rounded-full text-sm font-bold cursor-pointer"
+                style="background: linear-gradient(135deg, #FDCA6E, #FF9F43); border: none; color: #3D2800; font-family: inherit; box-shadow: 0 4px 16px rgba(253,202,110,0.3);">
+          开始冒险！
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PARENT GATE MODAL ===== -->
+  <div id="parent-modal" class="modal-backdrop">
+    <div id="parent-card" class="modal-card glass-card p-6" style="max-width: 360px;">
+      <h2 class="text-lg font-bold text-white m-0 mb-3 text-center" style="font-family: 'ZCOOL KuaiLe', sans-serif;">
+        👨‍👩‍👧 家长验证
+      </h2>
+      <!-- Gate step -->
+      <div id="parent-gate">
+        <p class="text-sm mb-4 text-center" style="color: rgba(197,198,199,0.7);" id="parent-question">请回答下面的问题：</p>
+        <div class="flex gap-2 mb-2 justify-center flex-wrap" id="parent-options"></div>
+      </div>
+      <!-- Management step (hidden until verified) -->
+      <div id="parent-management" class="hidden">
+        <p class="text-sm mb-3" style="color: rgba(253,202,110,0.9);">✅ 验证通过 — 管理小探险家</p>
+        <div id="parent-player-list" class="max-h-[260px] overflow-y-auto mb-4 rounded-xl p-2" style="background: rgba(0,0,0,0.2);"></div>
+      </div>
+      <div class="flex gap-2 mt-2">
+        <button id="parent-cancel" class="flex-1 py-2.5 rounded-full text-sm font-bold cursor-pointer"
+                style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(197,198,199,0.2); color: #C5C6C7; font-family: inherit;">
+          关闭
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>lucide.createIcons();</script>
+
+  <!-- ===== DATA & LOGIC ===== -->
+  <script>
+  const DB_KEY = 'starCarnivalDB';
+  const CURRENT_KEY = 'currentPlayerId';
+  const MAP_PAGE = 'world-map-v2.html';
+  const HOME_PAGE = 'index.html';
+  // 6 animal avatars for new player modal (horizontal row)
+  const AVATARS = ['🐸','🦉','🦜','🐠','🐙','🐢'];
+  // Extended set for initial players
+  const ALL_AVATARS = ['🐸','🦉','🦜','⭐','🐠','🐙','🐢','✨','🦎','🐵'];
+
+  const playerScroll = document.getElementById('player-scroll');
+  const newPlayerModal = document.getElementById('new-player-modal');
+  const newPlayerCard = document.getElementById('new-player-card');
+  const playerNameInput = document.getElementById('player-name-input');
+  const avatarRow = document.getElementById('avatar-row');
+  const cancelNew = document.getElementById('cancel-new');
+  const confirmNew = document.getElementById('confirm-new');
+  const parentBtn = document.getElementById('parent-btn');
+  const parentModal = document.getElementById('parent-modal');
+  const parentCard = document.getElementById('parent-card');
+  const parentQuestion = document.getElementById('parent-question');
+  const parentOptions = document.getElementById('parent-options');
+  const parentCancel = document.getElementById('parent-cancel');
+  const parentGate = document.getElementById('parent-gate');
+  const parentManagement = document.getElementById('parent-management');
+  const parentPlayerList = document.getElementById('parent-player-list');
+  const selectHint = document.getElementById('select-hint');
+  const emptyHint = document.getElementById('empty-hint');
+  const btnBack = document.getElementById('btn-back');
+
+  let db = { players: [], currentPlayerId: null };
+  let chosenAvatar = AVATARS[0];
+  let parentVerified = false;
+  let transitioning = false;
+
+  // ----- DB helpers -----
+  function loadDB() {
+    try {
+      const raw = localStorage.getItem(DB_KEY);
+      if (raw) {
+        db = JSON.parse(raw);
+        if (!db.players) db.players = [];
+        if (!db.currentPlayerId) db.currentPlayerId = null;
+      } else {
+        db = { players: [], currentPlayerId: null };
+      }
+    } catch(e) {
+      db = { players: [], currentPlayerId: null };
+    }
+  }
+  function saveDB() {
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  }
+  function setCurrentPlayer(id) {
+    db.currentPlayerId = id;
+    localStorage.setItem(CURRENT_KEY, id);
+    saveDB();
+  }
+
+  // ----- Init star field -----
+  (function initStars() {
+    const field = document.getElementById('star-field');
+    for (let i = 0; i < 80; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.left = Math.random()*100 + '%';
+      s.style.top = Math.random()*100 + '%';
+      const size = 1 + Math.random()*2;
+      s.style.width = size+'px';
+      s.style.height = size+'px';
+      s.style.animationDelay = Math.random()*3+'s';
+      s.style.animationDuration = (2+Math.random()*3)+'s';
+      field.appendChild(s);
+    }
+  })();
+
+  // ----- Init aurora particles -----
+  (function initAurora() {
+    const layer = document.getElementById('aurora-layer');
+    const colors = ['#45A29E', '#C5C6C7', '#66BB6A', '#FDCA6E'];
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('span');
+      p.className = 'aurora-particle';
+      p.style.top = Math.random()*100 + '%';
+      p.style.left = Math.random()*100 + '%';
+      const size = 2 + Math.random()*3;
+      p.style.width = size+'px';
+      p.style.height = size+'px';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.opacity = 0.3 + Math.random()*0.4;
+      p.style.animationDelay = Math.random()*6+'s';
+      p.style.animationDuration = (6+Math.random()*5)+'s';
+      layer.appendChild(p);
+    }
+  })();
+
+  // ----- Check sticker master badge -----
+  function checkStickerMaster(playerId) {
+    try {
+      const progressKey = 'starCarnival_progress_' + playerId;
+      const raw = localStorage.getItem(progressKey);
+      if (!raw) return false;
+      const prog = JSON.parse(raw);
+      if (!prog.unlockedStickers || !Array.isArray(prog.unlockedStickers)) return false;
+      return prog.unlockedStickers.length >= 7;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  // ----- Render players -----
+  function renderPlayers() {
+    playerScroll.innerHTML = '';
+
+    // Empty state: show hint + only add button
+    if (db.players.length === 0) {
+      selectHint.classList.add('hidden');
+      emptyHint.classList.remove('hidden');
+    } else {
+      selectHint.classList.remove('hidden');
+      emptyHint.classList.add('hidden');
+    }
+
+    db.players.forEach((p) => {
+      const card = document.createElement('div');
+      card.className = 'player-card flex flex-col items-center justify-center shrink-0';
+      card.style.width = '120px';
+      card.dataset.id = p.id;
+      const isCurrent = p.id === db.currentPlayerId;
+      if (isCurrent) card.classList.add('selected');
+      const hasMasterBadge = checkStickerMaster(p.id);
+      card.innerHTML = `
+        <div class="relative">
+          <div class="avatar-ring flex items-center justify-center rounded-full mb-2"
+               style="width: 120px; height: 120px; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.15), rgba(69,162,158,0.2) 60%, rgba(69,162,158,0.08)); border: 2.5px solid rgba(197,198,199,0.25); font-size: 56px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); transition: all 0.35s;">
+            ${p.avatar}
+          </div>
+          ${hasMasterBadge ? `<div class="badge-glow absolute -bottom-1 -right-1 flex items-center justify-center rounded-full" style="width: 36px; height: 36px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); border: 3px solid rgba(255,255,255,0.9); font-size: 18px; box-shadow: 0 0 15px rgba(255,215,0,0.6);">🏆</div>` : ''}
+        </div>
+        <span class="name-label text-sm font-bold whitespace-nowrap transition-all" style="color: #C5C6C7; font-family: 'ZCOOL KuaiLe', sans-serif; text-shadow: 0 2px 6px rgba(0,0,0,0.6);">${p.name}</span>
+        ${hasMasterBadge ? `<span class="text-xs font-bold whitespace-nowrap mt-0.5" style="color: #FFD700; font-family: 'ZCOOL KuaiLe', sans-serif; text-shadow: 0 0 8px rgba(255,215,0,0.5);">贴纸大师</span>` : ''}
+      `;
+      card.addEventListener('click', () => selectPlayer(p.id));
+      playerScroll.appendChild(card);
+    });
+
+    // Add friend button (always present)
+    const addBtn = document.createElement('div');
+    addBtn.className = 'flex flex-col items-center justify-center shrink-0 cursor-pointer';
+    addBtn.style.width = '120px';
+    addBtn.id = 'add-friend-btn';
+    addBtn.innerHTML = `
+      <div class="breathe-glow flex items-center justify-center rounded-full mb-2"
+           style="width: 120px; height: 120px; background: radial-gradient(circle at 35% 30%, rgba(78,205,196,0.25), rgba(78,205,196,0.1) 70%, transparent); border: 2.5px dashed rgba(78,205,196,0.5); font-size: 48px; color: #4ECDC4;">
+        ➕
+      </div>
+      <span class="text-sm font-bold whitespace-nowrap" style="color: #4ECDC4; font-family: 'ZCOOL KuaiLe', sans-serif; text-shadow: 0 0 10px rgba(78,205,196,0.4);">新朋友</span>
+    `;
+    addBtn.addEventListener('click', openNewPlayerModal);
+    playerScroll.appendChild(addBtn);
+  }
+
+  function selectPlayer(id) {
+    if (transitioning) return;
+    const p = db.players.find(x => x.id === id);
+    if (!p) return;
+
+    // Visually select
+    document.querySelectorAll('.player-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.id === id);
+    });
+    selectHint.style.opacity = '0';
+
+    // Play chime
+    playChime();
+
+    // Save
+    setCurrentPlayer(id);
+
+    // Delay 0.5s then auto-navigate to map
+    transitioning = true;
+    setTimeout(() => {
+      // Small zoom-out transition
+      document.body.style.transition = 'opacity 0.3s, transform 0.3s';
+      document.body.style.opacity = '0';
+      document.body.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        window.location.href = MAP_PAGE;
+      }, 300);
+    }, 500);
+  }
+
+  // ----- New player modal -----
+  function openNewPlayerModal() {
+    chosenAvatar = AVATARS[0];
+    playerNameInput.value = '';
+    renderAvatarRow();
+    newPlayerModal.classList.add('open');
+    newPlayerCard.classList.add('open');
+    setTimeout(() => playerNameInput.focus(), 400);
+  }
+  function closeNewPlayerModal() {
+    newPlayerCard.classList.remove('open');
+    newPlayerModal.classList.remove('open');
+  }
+
+  function renderAvatarRow() {
+    avatarRow.innerHTML = '';
+    AVATARS.forEach(av => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'avatar-btn flex items-center justify-center rounded-full shrink-0';
+      btn.style.cssText = 'width: 52px; height: 52px; font-size: 30px; background: rgba(255,255,255,0.06); border: 2px solid rgba(197,198,199,0.2); cursor: pointer; padding: 0;';
+      if (av === chosenAvatar) btn.classList.add('chosen');
+      btn.textContent = av;
+      btn.addEventListener('click', () => {
+        chosenAvatar = av;
+        avatarRow.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('chosen'));
+        btn.classList.add('chosen');
+      });
+      avatarRow.appendChild(btn);
+    });
+  }
+
+  cancelNew.addEventListener('click', closeNewPlayerModal);
+  newPlayerModal.addEventListener('click', (e) => {
+    if (e.target === newPlayerModal) closeNewPlayerModal();
+  });
+
+  // Enforce 4 Chinese character limit (also prevent long paste)
+  playerNameInput.addEventListener('input', () => {
+    // Chinese chars count as 1, limit to 4 characters total (using Array.from for unicode safety)
+    const chars = Array.from(playerNameInput.value);
+    if (chars.length > 4) {
+      playerNameInput.value = chars.slice(0, 4).join('');
+    }
+  });
+
+  confirmNew.addEventListener('click', () => {
+    const name = playerNameInput.value.trim();
+    const chars = Array.from(name);
+    if (!name || chars.length === 0) {
+      flashInputError();
+      return;
+    }
+    if (chars.length > 4) {
+      playerNameInput.value = chars.slice(0,4).join('');
+    }
+    const finalName = playerNameInput.value.trim();
+    const newP = {
+      id: 'p' + Date.now(),
+      name: finalName,
+      avatar: chosenAvatar,
+      createdAt: Date.now()
+    };
+    db.players.push(newP);
+    saveDB();
+    setCurrentPlayer(newP.id);
+    playChime();
+    closeNewPlayerModal();
+    renderPlayers();
+    // Scroll to new card then auto-jump
+    setTimeout(() => {
+      const card = document.querySelector(`.player-card[data-id="${newP.id}"]`);
+      if (card) {
+        card.classList.add('selected');
+        card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+      transitioning = true;
+      setTimeout(() => {
+        document.body.style.transition = 'opacity 0.3s, transform 0.3s';
+        document.body.style.opacity = '0';
+        document.body.style.transform = 'scale(0.95)';
+        setTimeout(() => window.location.href = MAP_PAGE, 300);
+      }, 600);
+    }, 300);
+  });
+
+  function flashInputError() {
+    playerNameInput.style.borderColor = '#FF4757';
+    playerNameInput.style.boxShadow = '0 0 0 3px rgba(255,71,87,0.2)';
+    setTimeout(() => {
+      playerNameInput.style.borderColor = '';
+      playerNameInput.style.boxShadow = '';
+    }, 1200);
+  }
+
+  playerNameInput.addEventListener('focus', () => {
+    playerNameInput.style.borderColor = '#FDCA6E';
+    playerNameInput.style.boxShadow = '0 0 0 3px rgba(253,202,110,0.2)';
+  });
+  playerNameInput.addEventListener('blur', () => {
+    playerNameInput.style.borderColor = 'rgba(197,198,199,0.2)';
+    playerNameInput.style.boxShadow = 'none';
+  });
+
+  // ----- Parent gate -----
+  let correctAnswer = 5;
+  parentBtn.addEventListener('click', openParentGate);
+
+  function openParentGate() {
+    parentVerified = false;
+    parentManagement.classList.add('hidden');
+    parentGate.classList.remove('hidden');
+    // Generate math problem (a + b where sum between 4 and 12)
+    const a = Math.floor(Math.random()*6) + 2;
+    const b = Math.floor(Math.random()*6) + 2;
+    correctAnswer = a + b;
+    const wrongs = new Set();
+    while (wrongs.size < 3) {
+      const w = correctAnswer + (Math.floor(Math.random()*5) - 2);
+      if (w !== correctAnswer && w >= 0 && w <= 20) wrongs.add(w);
+    }
+    const options = [correctAnswer, ...wrongs].sort(() => Math.random()-0.5);
+    parentQuestion.textContent = `家长验证：${a} + ${b} = ?`;
+    parentOptions.innerHTML = '';
+    options.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'px-4 py-2 rounded-full text-sm font-bold cursor-pointer';
+      b.style.cssText = 'background: rgba(255,255,255,0.08); border: 1.5px solid rgba(197,198,199,0.2); color: #fff; font-family: inherit; min-width: 48px; transition: all 0.2s;';
+      b.textContent = opt;
+      b.addEventListener('click', () => {
+        if (opt === correctAnswer) {
+          parentVerified = true;
+          showParentManagement();
+        } else {
+          b.style.background = 'rgba(255,71,87,0.2)';
+          b.style.borderColor = '#FF4757';
+          setTimeout(() => openParentGate(), 700);
+        }
+      });
+      parentOptions.appendChild(b);
+    });
+    parentModal.classList.add('open');
+    parentCard.classList.add('open');
+  }
+
+  function showParentManagement() {
+    parentGate.classList.add('hidden');
+    parentManagement.classList.remove('hidden');
+    parentPlayerList.innerHTML = '';
+    if (db.players.length === 0) {
+      parentPlayerList.innerHTML = '<p class="text-xs text-center py-4" style="color: rgba(197,198,199,0.5);">还没有小探险家</p>';
+      return;
+    }
+    db.players.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'parent-row';
+      row.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span style="font-size: 24px;">${p.avatar}</span>
+          <span class="text-sm font-bold" style="color: #fff;">${p.name}</span>
+        </div>
+        <div class="flex gap-1.5">
+          <button class="mini-btn reset-btn" data-id="${p.id}" style="background: rgba(78,205,196,0.15); border: 1px solid rgba(78,205,196,0.3); color: #4ECDC4;">🔄 重置</button>
+          <button class="mini-btn delete-btn" data-id="${p.id}" style="background: rgba(255,71,87,0.15); border: 1px solid rgba(255,71,87,0.3); color: #FF4757;">🗑️ 删除</button>
+        </div>
+      `;
+      parentPlayerList.appendChild(row);
+    });
+    // Bind actions
+    parentPlayerList.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const p = db.players.find(x => x.id === id);
+        if (!p) return;
+        if (confirm(`确定删除 "${p.name}" 及其所有进度吗？`)) {
+          db.players = db.players.filter(x => x.id !== id);
+          if (db.currentPlayerId === id) db.currentPlayerId = null;
+          saveDB();
+          renderPlayers();
+          showParentManagement();
+        }
+      });
+    });
+    parentPlayerList.querySelectorAll('.reset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const p = db.players.find(x => x.id === id);
+        if (!p) return;
+        if (confirm(`重置 "${p.name}" 的冒险进度吗？（玩家档案保留）`)) {
+          // Clear progress for this player
+          const progressPrefix = 'starCarnival_progress_' + id;
+          const toRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && (k.startsWith(progressPrefix) || k === 'starCarnival_islandState_' + id)) {
+              toRemove.push(k);
+            }
+          }
+          toRemove.forEach(k => localStorage.removeItem(k));
+          alert(`已重置 "${p.name}" 的进度`);
+        }
+      });
+    });
+  }
+
+  function closeParentModal() {
+    parentCard.classList.remove('open');
+    parentModal.classList.remove('open');
+    setTimeout(() => {
+      parentGate.classList.remove('hidden');
+      parentManagement.classList.add('hidden');
+    }, 300);
+  }
+  parentCancel.addEventListener('click', closeParentModal);
+  parentModal.addEventListener('click', (e) => {
+    if (e.target === parentModal) closeParentModal();
+  });
+
+  // ----- Audio -----
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function playChime() {
+    ensureAudio();
+    if (!audioCtx) return;
+    [523, 659, 784].forEach((f, i) => {
+      setTimeout(() => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime+0.3);
+      }, i*80);
+    });
+  }
+
+  // ----- Back button -----
+  btnBack.addEventListener('click', () => {
+    document.body.style.transition = 'opacity 0.25s';
+    document.body.style.opacity = '0';
+    setTimeout(() => { window.location.href = HOME_PAGE; }, 250);
+  });
+
+  // ----- Init -----
+  loadDB();
+  renderPlayers();
+
+  // Auto-scroll to current player
+  if (db.currentPlayerId && db.players.find(p => p.id === db.currentPlayerId)) {
+    setTimeout(() => {
+      const card = document.querySelector(`.player-card[data-id="${db.currentPlayerId}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }, 350);
+  }
+  </script>
+
+
+  <script>
+  // 页面自动朗读
+  (function() {
+    const AUTO_SPEAK_WELCOME = '选择你的小探险家，然后开始冒险吧！';
+    
+    function trySpeakWelcome() {
+      if (window.VoiceGuide && typeof window.VoiceGuide.speak === 'function') {
+        setTimeout(function() {
+          window.VoiceGuide.speak(AUTO_SPEAK_WELCOME);
+        }, 300);
+      } else {
+        setTimeout(trySpeakWelcome, 200);
+      }
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', trySpeakWelcome);
+    } else {
+      trySpeakWelcome();
+    }
+  })();
+  </script>
+
+
+  <script>
+  // 语音引导增强：点击文字朗读 + 关键提示自动朗读
+  (function() {
+    // 等待 VoiceGuide 就绪
+    function waitForVoiceGuide(callback) {
+      if (window.VoiceGuide) {
+        callback();
+      } else {
+        setTimeout(function() { waitForVoiceGuide(callback); }, 100);
+      }
+    }
+    
+    waitForVoiceGuide(function() {
+      // 给所有提示类元素添加点击朗读
+      function addClickSpeak(selector) {
+        var els = document.querySelectorAll(selector);
+        els.forEach(function(el) {
+          el.style.cursor = 'pointer';
+          el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var text = el.textContent || el.innerText;
+            if (text && text.trim()) {
+              window.VoiceGuide.speak(text.trim());
+            }
+          });
+        });
+      }
+      
+      // 常见的提示文字选择器
+      var selectors = [
+        '#hint-text',
+        '#hint-banner',
+        '#error-hint-text',
+        '#mic-status',
+        '#mic-hint',
+        '#friction-hint',
+        '.hint-text',
+        '.tip-text',
+        '#gem-title',
+        '#gem-subtitle'
+      ];
+      
+      selectors.forEach(function(sel) {
+        addClickSpeak(sel);
+      });
+      
+      // 自动朗读初始的 hint-text
+      var initialHint = document.querySelector('#hint-text, .hint-text');
+      if (initialHint && initialHint.textContent.trim()) {
+        setTimeout(function() {
+          window.VoiceGuide.speak(initialHint.textContent.trim());
+        }, 300);
+      }
+    });
+  })();
+  </script>
+
+
+  <script>
+  // 引导手势动画系统
+  window.GestureGuide = {
+    STORAGE_KEY: 'starlight_gesture_seen',
+    
+    
+    GESTURE_ENABLE_KEY: 'starlight_gesture_enabled',
+    
+    _enabled: true,
+    
+    // 检查手势指引是否启用
+    isEnabled: function() {
+      const v = localStorage.getItem(this.GESTURE_ENABLE_KEY);
+      return v !== 'false';
+    },
+    
+    // 设置手势指引启用状态
+    setEnabled: function(enabled) {
+      this._enabled = enabled;
+      localStorage.setItem(this.GESTURE_ENABLE_KEY, enabled ? 'true' : 'false');
+    },
+    
+    // 检查是否已经看过某个手势
+    hasSeen: function(id) { {
+      try {
+        var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        return seen[id] === true;
+      } catch(e) { return false; }
+    },
+    
+    // 标记已看过
+    markSeen: function(id) {
+      try {
+        var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        seen[id] = true;
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(seen));
+      } catch(e) {}
+    },
+    
+    // 移除手势
+    remove: function(overlay) {
+      if (overlay && overlay.parentNode) {
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s';
+        setTimeout(function() {
+          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 300);
+      }
+    },
+    
+    // === 点击手势 ===
+    showTap: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'tap_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      // 手指 emoji
+      var hand = document.createElement('div');
+      hand.className = 'gesture-hand gesture-tap-anim';
+      hand.textContent = '👆';
+      hand.style.left = (rect.left + rect.width / 2) + 'px';
+      hand.style.top = (rect.top + rect.height / 2) + 'px';
+      hand.style.fontSize = opts.size || '80px';
+      overlay.appendChild(hand);
+      
+      // 涟漪
+      var ripple = document.createElement('div');
+      ripple.className = 'gesture-ripple gesture-ripple-anim';
+      ripple.style.left = (rect.left + rect.width / 2) + 'px';
+      ripple.style.top = (rect.top + rect.height / 2) + 'px';
+      overlay.appendChild(ripple);
+      
+      document.body.appendChild(overlay);
+      
+      var self = this;
+      var timer = setTimeout(function() {
+        self.remove(overlay);
+        if (once) self.markSeen(id);
+        if (onComplete) onComplete();
+      }, duration);
+      
+      overlay._timer = timer;
+      return overlay;
+    },
+    
+    // === 拖拽手势 ===
+    showDrag: function(fromEl, toEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'drag_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 4000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var fromRect = fromEl.getBoundingClientRect();
+      var toRect = toEl.getBoundingClientRect();
+      
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      var hand = document.createElement('div');
+      hand.className = 'gesture-hand';
+      hand.textContent = '👆';
+      hand.style.fontSize = opts.size || '72px';
+      hand.style.position = 'absolute';
+      hand.style.top = (fromRect.top + fromRect.height / 2) + 'px';
+      hand.style.left = (fromRect.left + fromRect.width / 2) + 'px';
+      hand.style.opacity = '0';
+      hand.style.transform = 'translate(-50%,-50%)';
+      hand.style.transition = 'none';
+      overlay.appendChild(hand);
+      
+      document.body.appendChild(overlay);
+      
+      // 动画序列：出现→拖到目标→放下→消失
+      var steps = [
+        { t: 0,    opacity: 0,   x: fromRect.left + fromRect.width/2, y: fromRect.top + fromRect.height/2, scale: 1.3 },
+        { t: 300,  opacity: 1, x: fromRect.left + fromRect.width/2, y: fromRect.top + fromRect.height/2, scale: 1 },
+        { t: 1800, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+        { t: 2200, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 0.85 },
+        { t: 2500, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+        { t: 3000, opacity: 0,   x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+      ];
+      
+      var startTime = null;
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        
+        // 找到当前所在的两个关键帧
+        var prev = steps[0], next = steps[steps.length - 1];
+        for (var i = 0; i < steps.length - 1; i++) {
+          if (elapsed >= steps[i].t && elapsed < steps[i+1].t) {
+            prev = steps[i]; next = steps[i+1]; break;
+          }
+        }
+        if (elapsed >= steps[steps.length-1].t) {
+          prev = next = steps[steps.length-1];
+        }
+        
+        var progress = (next.t === prev.t) ? 1 : (elapsed - prev.t) / (next.t - prev.t);
+        var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+        
+        var curX = prev.x + (next.x - prev.x) * ease;
+        var curY = prev.y + (next.y - prev.y) * ease;
+        var curOp = prev.opacity + (next.opacity - prev.opacity) * ease;
+        var curScale = prev.scale + (next.scale - prev.scale) * ease;
+        
+        hand.style.left = curX + 'px';
+        hand.style.top = curY + 'px';
+        hand.style.opacity = curOp;
+        hand.style.transform = 'translate(-50%,-50%) scale(' + curScale + ')';
+        
+        if (elapsed < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          GestureGuide.remove(overlay);
+          if (once) GestureGuide.markSeen(id);
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(animate);
+      
+      return overlay;
+    },
+    
+    // === 双指摩擦手势 ===
+    showRub: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'rub_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3500;
+      var cycles = opts.cycles || 3;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      // 左手
+      var handL = document.createElement('div');
+      handL.className = 'gesture-hand';
+      handL.textContent = '👆';
+      handL.style.fontSize = '64px';
+      handL.style.position = 'absolute';
+      handL.style.top = (rect.top + rect.height / 2 - 10) + 'px';
+      handL.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+      handL.style.opacity = '0.9';
+      handL.style.transform = 'translate(-50%,-50%)';
+      overlay.appendChild(handL);
+      
+      // 右手
+      var handR = document.createElement('div');
+      handR.className = 'gesture-hand';
+      handR.textContent = '👆';
+      handR.style.fontSize = '64px';
+      handR.style.position = 'absolute';
+      handR.style.top = (rect.top + rect.height / 2 + 10) + 'px';
+      handR.style.left = (rect.left + rect.width / 2 + 20) + 'px';
+      handR.style.opacity = '0.9';
+      handR.style.transform = 'translate(-50%,-50%)';
+      overlay.appendChild(handR);
+      
+      document.body.appendChild(overlay);
+      
+      // 来回搓动
+      var rubDuration = 600; // 每次来回 600ms
+      var totalRubTime = rubDuration * cycles;
+      var startTime = null;
+      var fadeStart = totalRubTime + 500;
+      
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        
+        if (elapsed < totalRubTime) {
+          // 搓动阶段
+          var phase = (elapsed % rubDuration) / rubDuration;
+          var offset = Math.sin(phase * Math.PI * 2) * 26;
+          handL.style.transform = 'translate(calc(-50% + ' + (-offset) + 'px), -50%)';
+          handR.style.transform = 'translate(calc(-50% + ' + offset + 'px), -50%)';
+          handL.style.opacity = '0.9';
+          handR.style.opacity = '0.9';
+        } else if (elapsed < fadeStart) {
+          // 搓完停留
+          handL.style.opacity = '0.9';
+          handR.style.opacity = '0.9';
+        } else {
+          // 淡出
+          var fadeProgress = (elapsed - fadeStart) / (duration - fadeStart);
+          var fadeOp = Math.max(0, 0.65 * (1 - fadeProgress));
+          handL.style.opacity = fadeOp;
+          handR.style.opacity = fadeOp;
+        }
+        
+        if (elapsed < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          GestureGuide.remove(overlay);
+          if (once) GestureGuide.markSeen(id);
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(animate);
+      
+      return overlay;
+    },
+    
+    // === 按住手势 ===
+    showPress: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'press_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      var hand = document.createElement('div');
+      hand.className = 'gesture-hand gesture-press-anim';
+      hand.textContent = '👇';
+      hand.style.left = (rect.left + rect.width / 2) + 'px';
+      hand.style.top = (rect.top + rect.height / 2) + 'px';
+      hand.style.fontSize = opts.size || '80px';
+      overlay.appendChild(hand);
+      
+      document.body.appendChild(overlay);
+      
+      var self = this;
+      setTimeout(function() {
+        self.remove(overlay);
+        if (once) self.markSeen(id);
+        if (onComplete) onComplete();
+      }, duration);
+      
+      return overlay;
+    },
+    
+    // === 喊叫手势 ===
+    showShout: function(targetEl, options) {
+      var opts = options || {};
+      var id = opts.id || 'shout_' + Date.now();
+      var once = opts.once !== false;
+      var duration = opts.duration || 3000;
+      var onComplete = opts.onComplete;
+      
+      if (once && this.hasSeen(id)) return null;
+      
+      var rect = targetEl.getBoundingClientRect();
+      var overlay = document.createElement('div');
+      overlay.className = 'gesture-overlay';
+      
+      
+      // 嘴巴 emoji 靠近麦克风
+      var mouth = document.createElement('div');
+      mouth.className = 'gesture-hand';
+      mouth.textContent = '📢';
+      mouth.style.left = (rect.left + rect.width / 2) + 'px';
+      mouth.style.top = (rect.top - 40) + 'px';
+      mouth.style.fontSize = '64px';
+      mouth.style.opacity = '0';
+      mouth.style.transform = 'translate(-50%,-50%)';
+      overlay.appendChild(mouth);
+      
+      // 声波效果
+      for (var i = 1; i <= 3; i++) {
+        var wave = document.createElement('div');
+        wave.style.position = 'absolute';
+        wave.style.left = (rect.left + rect.width / 2) + 'px';
+        wave.style.top = (rect.top - 20) + 'px';
+        wave.style.width = (20 + i * 15) + 'px';
+        wave.style.height = (20 + i * 15) + 'px';
+        wave.style.borderRadius = '50%';
+        wave.style.border = '2px solid rgba(242,201,76,0.4)';
+        wave.style.opacity = '0';
+        wave.style.transform = 'translate(-50%,-50%)';
+        wave.style.pointerEvents = 'none';
+        wave._delay = i * 200;
+        wave._index = i;
+        overlay.appendChild(wave);
+      }
+      
+      document.body.appendChild(overlay);
+      
+      var startTime = null;
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        var progress = elapsed / duration;
+        
+        // 嘴巴淡入淡出
+        if (progress < 0.15) {
+          mouth.style.opacity = (progress / 0.15) * 0.7;
+        } else if (progress < 0.8) {
+          mouth.style.opacity = '1';
+        } else {
+          mouth.style.opacity = Math.max(0, 0.7 * (1 - (progress - 0.8) / 0.2));
+        }
+        
+        // 声波扩散
+        var children = overlay.children;
+        for (var i = 1; i < children.length; i++) {
+          var w = children[i];
+          if (!w._delay) continue;
+          var wElapsed = elapsed - w._delay;
+          if (wElapsed > 0 && wElapsed < 1500) {
+            var wProgress = (wElapsed % 800) / 800;
+            w.style.opacity = Math.max(0, 0.4 * (1 - wProgress));
+            var wScale = 1 + wProgress * 1.5;
+            w.style.transform = 'translate(-50%,-50%) scale(' + wScale + ')';
+          } else {
+            w.style.opacity = '0';
+          }
+        }
+        
+        if (elapsed < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          GestureGuide.remove(overlay);
+          if (once) GestureGuide.markSeen(id);
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(animate);
+      
+      return overlay;
+    }
+  };
+  </script>
+
+
+  <script>
+  // GESTURE_TRIGGER_player_select - 页面专属手势引导
+  (function() {
+    function waitAndShow() {
+      if (window.GestureGuide) {
+        
+    var avatar = document.querySelector('.avatar-option') || document.querySelector('[data-avatar]');
+    if (avatar) {
+      setTimeout(function() {
+        GestureGuide.showTap(avatar, { id: 'player_select', duration: 4000 });
+      }, 300);
+    }
+    
+      } else {
+        setTimeout(waitAndShow, 200);
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() { setTimeout(waitAndShow, 500); });
+    } else {
+      setTimeout(waitAndShow, 500);
+    }
+  })();
+  </script>
+
+
+  <!-- ========== 语音旁白系统 ========== -->
+  <button id="voice-settings-btn" class="voice-settings-btn" aria-label="语音设置">🔊</button>
+  <div id="voice-settings-panel" class="voice-settings-panel">
+    <div class="voice-settings-title">游戏设置</div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">语音引导</span>
+      <button id="voice-guide-toggle" class="voice-toggle on" aria-label="语音引导开关"></button>
+    </div>
+    <div class="voice-setting-row">
+      <span class="voice-setting-label">手势指引</span>
+      <button id="gesture-guide-toggle" class="voice-toggle on" aria-label="手势指引开关"></button>
+    </div>
+    <div class="voice-setting-row" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 12px;">
+      <span class="voice-setting-label">重置手势演示</span>
+      <button id="reset-gesture-btn" style="background: rgba(255,200,60,0.3); border: 1px solid rgba(255,200,60,0.5); color: #FFC048; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer;">重置</button>
+    </div>
+  </div>
+  <script>
+  (function() {
+    const STORAGE_KEY = 'starlight_voice_guide';
+    const synth = window.speechSynthesis;
+    
+    function isVoiceGuideEnabled() {
+      const v = localStorage.getItem(STORAGE_KEY);
+      return v !== 'false';
+    }
+    
+    function setVoiceGuideEnabled(enabled) {
+      localStorage.setItem(STORAGE_KEY, enabled ? 'true' : 'false');
+      updateBtnIcon();
+      if (enabled) {
+        speakGuide('语音引导已开启');
+      }
+    }
+    
+    function updateBtnIcon() {
+      const btn = document.getElementById('voice-settings-btn');
+      if (!btn) return;
+      if (isVoiceGuideEnabled()) {
+        btn.textContent = '🔊';
+        btn.classList.remove('muted');
+      } else {
+        btn.textContent = '🔇';
+        btn.classList.add('muted');
+      }
+    }
+    
+    let currentUtterance = null;
+    
+    function stopSpeak() {
+      if (synth && synth.speaking) {
+        synth.cancel();
+      }
+      currentUtterance = null;
+    }
+    
+    function speakGuide(text, options) {
+      if (!isVoiceGuideEnabled()) return;
+      if (!synth) return;
+      if (!text || !text.trim()) return;
+      
+      stopSpeak();
+      
+      const opts = options || {};
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = opts.rate || 0.9;
+      utter.pitch = opts.pitch || 1.3;
+      utter.volume = opts.volume || 1;
+      
+      const voices = synth.getVoices();
+      const zhVoice = voices.find(function(v) {
+        return v.lang && v.lang.toLowerCase().indexOf('zh') === 0;
+      });
+      if (zhVoice) utter.voice = zhVoice;
+      
+      currentUtterance = utter;
+      synth.speak(utter);
+    }
+    
+    function speakEn(text, options) {
+      if (!isVoiceGuideEnabled()) return;
+      if (!synth) return;
+      
+      stopSpeak();
+      
+      const opts = options || {};
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = opts.rate || 0.8;
+      utter.pitch = opts.pitch || 1.2;
+      utter.volume = opts.volume || 1;
+      
+      currentUtterance = utter;
+      synth.speak(utter);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('voice-settings-btn');
+      const panel = document.getElementById('voice-settings-panel');
+      const toggle = document.getElementById('voice-guide-toggle');
+      const resetBtn = document.getElementById('reset-gesture-btn');
+      
+      updateBtnIcon();
+      if (isVoiceGuideEnabled()) {
+        if (toggle) toggle.classList.add('on');
+      } else {
+        if (toggle) toggle.classList.remove('on');
+      }
+      
+      if (btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (panel) panel.classList.toggle('show');
+        });
+      }
+      
+      document.addEventListener('click', function(e) {
+        if (panel && !panel.contains(e.target) && e.target !== btn) {
+          panel.classList.remove('show');
+        }
+      });
+      
+      if (toggle) {
+        toggle.addEventListener('click', function() {
+          const enabled = !isVoiceGuideEnabled();
+          setVoiceGuideEnabled(enabled);
+          if (enabled) {
+            toggle.classList.add('on');
+          } else {
+            toggle.classList.remove('on');
+          }
+        });
+      }
+      
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+          try {
+            localStorage.removeItem('starlight_gesture_seen');
+            alert('手势演示已重置！刷新页面即可重新看到引导动画。');
+          } catch(e) {}
+        });
+      }
+      
+      if (synth) {
+        synth.getVoices();
+        window.addEventListener('voiceschanged', function() {
+          synth.getVoices();
+        });
+      }
+    });
+    
+    window.VoiceGuide = {
+      speak: speakGuide,
+      speakEn: speakEn,
+      stop: stopSpeak,
+      isEnabled: isVoiceGuideEnabled
+    };
+  })();
+  </script>
+
+
+  <!-- ========== 小星星向导 ========== -->
+  <div id="star-guide-container" class="star-guide-container">
+    <div id="star-guide-balloon" class="star-guide-balloon"></div>
+    <div id="star-guide" class="star-guide" title="小星星向导">⭐</div>
+  </div>
+  <script>
+  // 小星星向导系统
+  window.StarGuide = {
+    container: null,
+    star: null,
+    balloon: null,
+    currentStep: 0,
+    idleTimer: null,
+    idleTimeout: 3000,
+    isFlying: false,
+    targetGlow: null,
+    
+    shownSteps: [],
+    // 每个页面的引导步骤配置
+    steps: [],
+    
+    init: function(stepsConfig) {
+      this.container = document.getElementById('star-guide-container');
+      this.star = document.getElementById('star-guide');
+      this.balloon = document.getElementById('star-guide-balloon');
+      this.steps = stepsConfig || [];
+      this.currentStep = 0;
+      
+      this.shownSteps = [];
+      if (!this.container || !this.star || !this.balloon) return;
+      
+      var self = this;
+      
+      // 星星点击事件
+      this.star.addEventListener('click', function() {
+        self.showCurrentStep();
+      });
+      
+      // 监听用户操作（重置空闲计时器）
+      document.addEventListener('mousedown', function() { self.resetIdleTimer(); });
+      document.addEventListener('touchstart', function() { self.resetIdleTimer(); });
+      document.addEventListener('pointerdown', function() { self.resetIdleTimer(); });
+      
+      // 启动空闲检测
+      this.startIdleTimer();
+      
+      // 页面加载完成后，延迟显示星星
+      setTimeout(function() {
+        self.container.classList.remove('hidden');
+      }, 500);
+    },
+    
+    startIdleTimer: function() {
+      var self = this;
+      this.idleTimer = setTimeout(function() {
+        self.onIdle();
+      }, this.idleTimeout);
+    },
+    
+    resetIdleTimer: function() {
+      if (this.idleTimer) {
+        clearTimeout(this.idleTimer);
+      }
+      this.startIdleTimer();
+      // 隐藏气球
+      this.hideBalloon();
+    },
+    
+    onIdle: function() {
+      if (this.isFlying) return;
+      if (this.currentStep >= this.steps.length) return;
+      
+      var step = this.steps[this.currentStep];
+      if (!step) return;
+      
+      // 如果步骤需要等待某个条件，则检查
+      if (step.condition && !step.condition()) {
+        this.startIdleTimer();
+        return;
+      }
+
+      // 如果本步骤已经展示过，跳过（避免语音重复覆盖教学）
+      if ((this.shownSteps && this.shownSteps.indexOf(this.currentStep) !== -1)) {
+        this.startIdleTimer();
+        return;
+      }
+
+      
+      this.showCurrentStep();
+
+    },
+    
+    showCurrentStep: function() {
+      if (this.currentStep >= this.steps.length) return;
+      
+      var step = this.steps[this.currentStep];
+      if (!step) return;
+      
+      var self = this;
+      
+      // 已展示过的步骤不再朗读（用户点星星时跳过）
+      if ((this.shownSteps && this.shownSteps.indexOf(this.currentStep) !== -1)) return;
+      // 如果有目标元素，飞过去
+      if (step.target) {
+        var targetEl = typeof step.target === 'string' 
+          ? document.querySelector(step.target) 
+          : step.target;
+        
+        if (targetEl) {
+          this.flyTo(targetEl, function() {
+                        // 记录已展示的步骤，防止重复朗读
+            var shownSteps = self.shownSteps || (self.shownSteps = []);
+            if (shownSteps.indexOf(self.currentStep) === -1) {
+              shownSteps.push(self.currentStep);
+            }
+            self.speak(step.speak || step.text || '看！那里有一个发光的圈圈，点一下试试！');
+            self.showBalloon(step.text || '点一下试试！');
+            self.highlightTarget(targetEl);
+          });
+        } else {
+          // 找不到目标，直接显示提示
+          this.speak(step.speak || step.text);
+          this.showBalloon(step.text);
+        }
+      } else {
+        // 没有目标，直接显示提示
+        this.speak(step.speak || step.text);
+        this.showBalloon(step.text);
+      }
+    },
+    
+    flyTo: function(targetEl, callback) {
+      this.isFlying = true;
+      
+      var starRect = this.star.getBoundingClientRect();
+      var targetRect = targetEl.getBoundingClientRect();
+      
+      var startX = starRect.left + starRect.width / 2;
+      var startY = starRect.top + starRect.height / 2;
+      var endX = targetRect.left + targetRect.width / 2;
+      var endY = targetRect.top + targetRect.height / 2 - 40;
+      
+      // 创建飞行中的星星克隆体
+      var flyingStar = document.createElement('div');
+      flyingStar.className = 'star-guide-flying';
+      flyingStar.textContent = '⭐';
+      flyingStar.style.left = startX + 'px';
+      flyingStar.style.top = startY + 'px';
+      flyingStar.style.transform = 'translate(-50%, -50%)';
+      document.body.appendChild(flyingStar);
+      
+      // 隐藏原星星
+      this.container.classList.add('hidden');
+      
+      // 飞行动画
+      var duration = 800;
+      var startTime = null;
+      
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        
+        // 缓动函数
+        var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+        
+        var curX = startX + (endX - startX) * ease;
+        var curY = startY + (endY - startY) * ease;
+        
+        flyingStar.style.left = curX + 'px';
+        flyingStar.style.top = curY + 'px';
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // 动画结束，移除飞行星星，显示原星星在目标位置
+          document.body.removeChild(flyingStar);
+          
+          // 将原星星移到目标位置
+          self.container.style.position = 'fixed';
+          self.container.style.left = (endX - 30) + 'px';
+          self.container.style.top = (endY - 30) + 'px';
+          self.container.style.right = 'auto';
+          self.container.style.bottom = 'auto';
+          self.container.classList.remove('hidden');
+          
+          self.isFlying = false;
+          if (callback) callback();
+        }
+      }
+      
+      requestAnimationFrame(animate);
+    },
+    
+    returnToCorner: function() {
+      if (this.isFlying) return;
+      
+      var self = this;
+      
+      // 创建飞行中的星星克隆体
+      var starRect = this.star.getBoundingClientRect();
+      var startX = starRect.left + starRect.width / 2;
+      var startY = starRect.top + starRect.height / 2;
+      
+      var endX = window.innerWidth - 54;
+      var endY = window.innerHeight - 54;
+      
+      var flyingStar = document.createElement('div');
+      flyingStar.className = 'star-guide-flying';
+      flyingStar.textContent = '⭐';
+      flyingStar.style.left = startX + 'px';
+      flyingStar.style.top = startY + 'px';
+      flyingStar.style.transform = 'translate(-50%, -50%)';
+      document.body.appendChild(flyingStar);
+      
+      this.container.classList.add('hidden');
+      this.isFlying = true;
+      
+      var duration = 600;
+      var startTime = null;
+      
+      function animate(now) {
+        if (!startTime) startTime = now;
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        
+        var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+        
+        var curX = startX + (endX - startX) * ease;
+        var curY = startY + (endY - startY) * ease;
+        
+        flyingStar.style.left = curX + 'px';
+        flyingStar.style.top = curY + 'px';
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          document.body.removeChild(flyingStar);
+          
+          self.container.style.position = 'fixed';
+          self.container.style.right = '24px';
+          self.container.style.bottom = '24px';
+          self.container.style.left = 'auto';
+          self.container.style.top = 'auto';
+          self.container.classList.remove('hidden');
+          
+          self.isFlying = false;
+        }
+      }
+      
+      requestAnimationFrame(animate);
+    },
+    
+    showBalloon: function(text) {
+      if (!this.balloon) return;
+      this.balloon.textContent = text;
+      this.balloon.classList.add('show');
+      
+      // 3秒后自动隐藏
+      setTimeout(function() {
+        this.hideBalloon();
+      }.bind(this), 3500);
+    },
+    
+    hideBalloon: function() {
+      if (!this.balloon) return;
+      this.balloon.classList.remove('show');
+    },
+    
+    highlightTarget: function(targetEl) {
+      // 移除旧的光环
+      if (this.targetGlow && this.targetGlow.parentNode) {
+        this.targetGlow.parentNode.removeChild(this.targetGlow);
+      }
+      
+      var rect = targetEl.getBoundingClientRect();
+      this.targetGlow = document.createElement('div');
+      this.targetGlow.className = 'star-guide-target-glow';
+      this.targetGlow.style.left = (rect.left - 8) + 'px';
+      this.targetGlow.style.top = (rect.top - 8) + 'px';
+      this.targetGlow.style.width = (rect.width + 16) + 'px';
+      this.targetGlow.style.height = (rect.height + 16) + 'px';
+      
+      document.body.appendChild(this.targetGlow);
+      
+      // 3秒后移除光环
+      setTimeout(function() {
+        if (this.targetGlow && this.targetGlow.parentNode) {
+          this.targetGlow.parentNode.removeChild(this.targetGlow);
+          this.targetGlow = null;
+        }
+      }.bind(this), 3500);
+    },
+    
+    speak: function(text) {
+      if (window.VoiceGuide && window.VoiceGuide.speak) {
+        window.VoiceGuide.speak(text);
+      }
+    },
+    
+    nextStep: function() {
+      // 清除目标光环
+      if (this.targetGlow && this.targetGlow.parentNode) {
+        this.targetGlow.parentNode.removeChild(this.targetGlow);
+        this.targetGlow = null;
+      }
+      
+      this.hideBalloon();
+      this.currentStep++;
+      
+      // 返回角落
+      setTimeout(function() {
+        this.returnToCorner();
+        
+        // 重新启动空闲检测
+        setTimeout(function() {
+          this.startIdleTimer();
+        }.bind(this), 1000);
+      }.bind(this), 500);
+    },
+    
+    reset: function() {
+      this.currentStep = 0;
+      this.returnToCorner();
+      this.hideBalloon();
+      if (this.targetGlow && this.targetGlow.parentNode) {
+        this.targetGlow.parentNode.removeChild(this.targetGlow);
+        this.targetGlow = null;
+      }
+      this.startIdleTimer();
+    }
+  };
+  </script>
+
+
+  <script>
+  // STAR_GUIDE_STEPS_player_select - 小星星向导步骤配置
+  (function() {
+    function initStarGuide() {
+      if (window.StarGuide) {
+        window.StarGuide.init([
+          
+    { target: '.avatar-option', text: '选择一个小探险家开始游戏！', speak: '选择一个小探险家开始游戏！' }
+    
+        ]);
+      } else {
+        setTimeout(initStarGuide, 300);
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initStarGuide);
+    } else {
+      initStarGuide();
+    }
+  })();
+  </script>
+
+</body>
+</html>
