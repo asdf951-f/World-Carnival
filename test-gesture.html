@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手势测试页面</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+    }
+    .test-btn {
+      background: #F2C94C;
+      color: #333;
+      padding: 20px 40px;
+      font-size: 24px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(242,201,76,0.4);
+      margin: 20px;
+    }
+    .test-btn:hover {
+      transform: scale(1.05);
+    }
+    .log-area {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      padding: 20px;
+      margin: 20px;
+      border-radius: 16px;
+      width: 80%;
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+    }
+    /* === 引导手势动画系统 === */
+    .gesture-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gesture-hand {
+      position: absolute;
+      font-size: 80px;
+      opacity: 0;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6)) drop-shadow(0 0 12px rgba(255,255,255,0.5));
+      pointer-events: none;
+      z-index: 9999;
+    }
+    @keyframes gestureTap {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(1.8); }
+      15% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      40% { opacity: 1; transform: translate(-50%,-50%) scale(0.95); }
+      60% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      80% { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.3); }
+    }
+    .gesture-tap-anim {
+      animation: gestureTap 1.8s ease-in-out infinite;
+    }
+    .gesture-ripple {
+      position: absolute;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,200,60,0.9);
+      pointer-events: none;
+      z-index: 9999;
+    }
+    @keyframes gestureRipple {
+      0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; }
+      100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+    }
+    .gesture-ripple-anim {
+      animation: gestureRipple 1.8s ease-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="color: white; font-size: 32px; margin-bottom: 20px;">手势动画测试</h1>
+  
+  <button class="test-btn" id="test-btn-1">测试点击手势</button>
+  <button class="test-btn" id="test-btn-2">测试拖拽手势</button>
+  <button class="test-btn" id="test-btn-3">测试摩擦手势</button>
+  
+  <div id="target-area" style="width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 20px; margin: 20px; display: flex; align-items: center; justify-content: center; color: white;">
+    目标区域
+  </div>
+  
+  <div class="log-area" id="log-area">
+    <div>=== 日志 ===</div>
+  </div>
+
+  <script>
+
+/* ====== VoiceQueueV9 全局唯一语音互斥队列 v9.1 ======
+ *  解决：setHint() 自动VoiceGuide.speak + 页面显式VoiceGuide.speak 同时触发 → 「话赶话打架」
+ *  规则：
+ *    1. 所有语音播放必须走 queue.push(text, opts) → 串行，不并行
+ *    2. setHint 只改文字，不再自动调 VoiceGuide.speak（要说话就显式 push）
+ *    3. 新 push 进来时会 cancel 当前正在说的（保证最新引导优先）
+ */
+(function(){
+  if (window.__VoiceQueueV9) return;
+  var Q = {
+    queue: [],
+    current: null,
+    locked: false,
+    push: function(text, opts) {
+      opts = opts || {};
+      var lang = opts.lang || (opts.en ? 'en-US' : 'zh-CN');
+      var rate = opts.rate || 0.85;
+      var priority = opts.priority || 0;
+      var item = { text: text, lang: lang, rate: rate, priority: priority };
+      // 立即终止当前正在说的（最新优先）
+      Q.cancel();
+      Q.queue.push(item);
+      Q._drain();
+      return item;
+    },
+    cancel: function() {
+      Q.queue.length = 0;
+      try {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      } catch(e) {}
+      try {
+        if (window.VoiceGuide && typeof window.VoiceGuide.stop === 'function') {
+          window.VoiceGuide.stop();
+        } else if (window.VoiceGuide && typeof window.VoiceGuide.cancel === 'function') {
+          window.VoiceGuide.cancel();
+        }
+      } catch(e) {}
+    },
+    _drain: function() {
+      if (Q.locked) return;
+      if (Q.queue.length === 0) { Q.current = null; return; }
+      // 按 priority 从大到小弹
+      Q.queue.sort(function(a,b){ return b.priority - a.priority; });
+      var item = Q.queue.shift();
+      Q.current = item;
+      Q.locked = true;
+
+      var done = false;
+      var finish = function() {
+        if (done) return;
+        done = true;
+        Q.locked = false;
+        setTimeout(Q._drain, 120); // 两个语音之间留 120ms 空气，避免吞字
+      };
+
+      // 优先走原 VoiceGuide.speak（因为带音量/mute/禁用开关判断）
+      var usedVG = false;
+      try {
+        if (window.VoiceGuide && typeof window.VoiceGuide.speak === 'function'
+            && (!window.VoiceGuide.isEnabled || window.VoiceGuide.isEnabled())) {
+          window.VoiceGuide.speak(item.text, { lang: item.lang, rate: item.rate, onEnd: finish });
+          usedVG = true;
+        }
+      } catch(e) { usedVG = false; }
+      if (!usedVG) {
+        // 降级：原生 speechSynthesis
+        try {
+          if (!('speechSynthesis' in window)) { finish(); return; }
+          var synth = window.speechSynthesis;
+          synth.cancel();
+          var u = new SpeechSynthesisUtterance(item.text);
+          u.lang = item.lang;
+          u.rate = item.rate;
+          u.onend = finish;
+          u.onerror = finish;
+          synth.speak(u);
+        } catch(e) { finish(); }
+      }
+      // 绝对保险：最长 12s 自动结束（防止某些浏览器onend不触发）
+      setTimeout(finish, 12000);
+    }
+  };
+  window.__VoiceQueueV9 = Q;
+  window.VoiceQueueV9 = Q;
+  // 兼容：把所有对 VoiceGuide.speak 的外部裸调用先拦一层去重
+  try {
+    if (window.VoiceGuide && window.VoiceGuide.speak) {
+      var origSpeak = window.VoiceGuide.speak.bind(window.VoiceGuide);
+      var lastSpeakText = '', lastSpeakAt = 0;
+      window.VoiceGuide.speak = function(text, opts) {
+        var now = Date.now();
+        // 完全相同的话 1.5s 内不重复
+        if (text === lastSpeakText && now - lastSpeakAt < 1500) return;
+        lastSpeakText = text; lastSpeakAt = now;
+        // 走统一队列
+        return Q.push(text, opts);
+      };
+    }
+  } catch(e) {}
+})();
+
+
+    // 简单的日志函数
+    function log(msg) {
+      var logArea = document.getElementById('log-area');
+      logArea.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + msg + '</div>';
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+    
+    // 引导手势动画系统
+    window.GestureGuide = {
+      STORAGE_KEY: 'starlight_gesture_seen_test',
+      
+      hasSeen: function(id) {
+        try {
+          var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+          return !!seen[id];
+        } catch(e) { return false; }
+      },
+      
+      markSeen: function(id) {
+        try {
+          var seen = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+          seen[id] = true;
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(seen));
+        } catch(e) {}
+      },
+      
+      remove: function(overlay) {
+        if (overlay && overlay.parentNode) {
+          overlay.style.opacity = '0';
+          overlay.style.transition = 'opacity 0.3s';
+          setTimeout(function() {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+          }, 300);
+        }
+      },
+      
+      showTap: function(targetEl, options) {
+        var opts = options || {};
+        var id = opts.id || 'tap_' + Date.now();
+        var once = opts.once !== false;
+        var duration = opts.duration || 3000;
+        
+        log('showTap called, id: ' + id + ', once: ' + once + ', hasSeen: ' + this.hasSeen(id));
+        
+        if (once && this.hasSeen(id)) {
+          log('手势已看过，跳过');
+          return null;
+        }
+        
+        var rect = targetEl.getBoundingClientRect();
+        log('目标位置: x=' + rect.left + ', y=' + rect.top);
+        
+        var overlay = document.createElement('div');
+        overlay.className = 'gesture-overlay';
+        
+        var hand = document.createElement('div');
+        hand.className = 'gesture-hand gesture-tap-anim';
+        hand.textContent = '👆';
+        hand.style.left = (rect.left + rect.width / 2) + 'px';
+        hand.style.top = (rect.top + rect.height / 2) + 'px';
+        hand.style.fontSize = opts.size || '80px';
+        overlay.appendChild(hand);
+        
+        var ripple = document.createElement('div');
+        ripple.className = 'gesture-ripple gesture-ripple-anim';
+        ripple.style.left = (rect.left + rect.width / 2) + 'px';
+        ripple.style.top = (rect.top + rect.height / 2) + 'px';
+        overlay.appendChild(ripple);
+        
+        document.body.appendChild(overlay);
+        log('手势已添加到页面');
+        
+        var self = this;
+        setTimeout(function() {
+          self.remove(overlay);
+          if (once) self.markSeen(id);
+          log('手势动画结束');
+        }, duration);
+        
+        return overlay;
+      },
+      
+      showDrag: function(fromEl, toEl, options) {
+        var opts = options || {};
+        var id = opts.id || 'drag_' + Date.now();
+        var once = opts.once !== false;
+        var duration = opts.duration || 4000;
+        
+        if (once && this.hasSeen(id)) return null;
+        
+        var fromRect = fromEl.getBoundingClientRect();
+        var toRect = toEl.getBoundingClientRect();
+        
+        var overlay = document.createElement('div');
+        overlay.className = 'gesture-overlay';
+        
+        var hand = document.createElement('div');
+        hand.className = 'gesture-hand';
+        hand.textContent = '👆';
+        hand.style.fontSize = opts.size || '72px';
+        hand.style.position = 'absolute';
+        hand.style.top = (fromRect.top + fromRect.height / 2) + 'px';
+        hand.style.left = (fromRect.left + fromRect.width / 2) + 'px';
+        hand.style.opacity = '0';
+        hand.style.transform = 'translate(-50%,-50%)';
+        overlay.appendChild(hand);
+        
+        document.body.appendChild(overlay);
+        
+        var steps = [
+          { t: 0,    opacity: 0,   x: fromRect.left + fromRect.width/2, y: fromRect.top + fromRect.height/2, scale: 1.3 },
+          { t: 300,  opacity: 1, x: fromRect.left + fromRect.width/2, y: fromRect.top + fromRect.height/2, scale: 1 },
+          { t: 1800, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+          { t: 2200, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 0.85 },
+          { t: 2500, opacity: 1, x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+          { t: 3000, opacity: 0,   x: toRect.left + toRect.width/2, y: toRect.top + toRect.height/2, scale: 1 },
+        ];
+        
+        var startTime = null;
+        function animate(now) {
+          if (!startTime) startTime = now;
+          var elapsed = now - startTime;
+          
+          var prev = steps[0], next = steps[steps.length - 1];
+          for (var i = 0; i < steps.length - 1; i++) {
+            if (elapsed >= steps[i].t && elapsed < steps[i+1].t) {
+              prev = steps[i]; next = steps[i+1]; break;
+            }
+          }
+          
+          var progress = (next.t === prev.t) ? 1 : (elapsed - prev.t) / (next.t - prev.t);
+          var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
+          
+          var curX = prev.x + (next.x - prev.x) * ease;
+          var curY = prev.y + (next.y - prev.y) * ease;
+          var curOp = prev.opacity + (next.opacity - prev.opacity) * ease;
+          var curScale = prev.scale + (next.scale - prev.scale) * ease;
+          
+          hand.style.left = curX + 'px';
+          hand.style.top = curY + 'px';
+          hand.style.opacity = curOp;
+          hand.style.transform = 'translate(-50%,-50%) scale(' + curScale + ')';
+          
+          if (elapsed < duration) {
+            requestAnimationFrame(animate);
+          } else {
+            GestureGuide.remove(overlay);
+            if (once) GestureGuide.markSeen(id);
+          }
+        }
+        requestAnimationFrame(animate);
+        
+        return overlay;
+      },
+      
+      showRub: function(targetEl, options) {
+        var opts = options || {};
+        var id = opts.id || 'rub_' + Date.now();
+        var once = opts.once !== false;
+        var duration = opts.duration || 3500;
+        
+        if (once && this.hasSeen(id)) return null;
+        
+        var rect = targetEl.getBoundingClientRect();
+        var overlay = document.createElement('div');
+        overlay.className = 'gesture-overlay';
+        
+        var handL = document.createElement('div');
+        handL.className = 'gesture-hand';
+        handL.textContent = '👆';
+        handL.style.fontSize = '64px';
+        handL.style.position = 'absolute';
+        handL.style.top = (rect.top + rect.height / 2 - 10) + 'px';
+        handL.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+        handL.style.opacity = '0.9';
+        handL.style.transform = 'translate(-50%,-50%)';
+        overlay.appendChild(handL);
+        
+        var handR = document.createElement('div');
+        handR.className = 'gesture-hand';
+        handR.textContent = '👆';
+        handR.style.fontSize = '64px';
+        handR.style.position = 'absolute';
+        handR.style.top = (rect.top + rect.height / 2 + 10) + 'px';
+        handR.style.left = (rect.left + rect.width / 2 + 20) + 'px';
+        handR.style.opacity = '0.9';
+        handR.style.transform = 'translate(-50%,-50%)';
+        overlay.appendChild(handR);
+        
+        document.body.appendChild(overlay);
+        
+        var rubDuration = 600;
+        var totalRubTime = rubDuration * 3;
+        var startTime = null;
+        var fadeStart = totalRubTime + 500;
+        
+        function animate(now) {
+          if (!startTime) startTime = now;
+          var elapsed = now - startTime;
+          
+          if (elapsed < totalRubTime) {
+            var phase = (elapsed % rubDuration) / rubDuration;
+            var offset = Math.sin(phase * Math.PI * 2) * 26;
+            handL.style.transform = 'translate(calc(-50% + ' + (-offset) + 'px), -50%)';
+            handR.style.transform = 'translate(calc(-50% + ' + offset + 'px), -50%)';
+            handL.style.opacity = '0.9';
+            handR.style.opacity = '0.9';
+          } else if (elapsed < fadeStart) {
+            handL.style.opacity = '0.9';
+            handR.style.opacity = '0.9';
+          } else {
+            var fadeProgress = (elapsed - fadeStart) / (duration - fadeStart);
+            var fadeOp = Math.max(0, 0.9 * (1 - fadeProgress));
+            handL.style.opacity = fadeOp;
+            handR.style.opacity = fadeOp;
+          }
+          
+          if (elapsed < duration) {
+            requestAnimationFrame(animate);
+          } else {
+            GestureGuide.remove(overlay);
+            if (once) GestureGuide.markSeen(id);
+          }
+        }
+        requestAnimationFrame(animate);
+        
+        return overlay;
+      }
+    };
+    
+    // 按钮事件
+    document.getElementById('test-btn-1').addEventListener('click', function() {
+      log('点击测试按钮1');
+      GestureGuide.showTap(document.getElementById('test-btn-1'), { once: false });
+    });
+    
+    document.getElementById('test-btn-2').addEventListener('click', function() {
+      log('点击测试按钮2');
+      GestureGuide.showDrag(document.getElementById('test-btn-2'), document.getElementById('target-area'), { once: false });
+    });
+    
+    document.getElementById('test-btn-3').addEventListener('click', function() {
+      log('点击测试按钮3');
+      GestureGuide.showRub(document.getElementById('target-area'), { once: false });
+    });
+    
+    // 页面加载后自动测试
+    window.addEventListener('load', function() {
+      log('页面加载完成');
+      log('GestureGuide 是否存在: ' + !!window.GestureGuide);
+      
+      setTimeout(function() {
+        log('自动测试点击手势');
+        GestureGuide.showTap(document.getElementById('test-btn-1'), { once: false });
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
