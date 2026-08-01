@@ -1,6 +1,6 @@
-BUILD: v9.1 打包时间 2026-08-01 14:50:47
-修复点1: TURTLE小海龟卡死修复(onerror语法破坏+mic-btn双绑+VoiceQueueV9唯一队列+onend5次上限)
-修复点2: SHADOW-JUNGLE 5页全检查(sloth:纠正mic-btn绑错 / monkey:补MicController+onend死循环 / chameleon:纯跟读无麦)
-自检结果: selfcheck_v91_final.py 35/35 项全部PASS
-v8回归: 海星Fix4/BFCache24页/MicController4核心页/success_nav_wrap 全部无破坏
-HTML数: 25
+BUILD v9.2: 2026-08-01 15:21:46
+【紧急修复】所有24页<body>标签background:url()的单引号被误删导致base64里>截断body→按钮/DOM全消失！已全部从v7备份还原body标签闭合。
+【同时保留v9.1所有修复】：
+  1. TURTLE小海龟卡死修复：onerror语法完整/mic-btn双绑/VoiceQueueV9唯一队列/onend5次上限/分支都先置__turtleSuccess
+  2. SHADOW-JUNGLE 5页全检查：sloth纠正mic-btn绑错/monkey补MicController+onend死循环5次/chameleon纯跟读无麦/v3萤火虫Light实例1次
+【结构验证】body闭合25/25✅ index.cta按钮在<main>✅ world-map-v2点击21处✅ story→player-select跳转正常
