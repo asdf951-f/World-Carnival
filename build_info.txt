@@ -1,0 +1,6 @@
+BUILD: v9.1 打包时间 2026-08-01 14:50:47
+修复点1: TURTLE小海龟卡死修复(onerror语法破坏+mic-btn双绑+VoiceQueueV9唯一队列+onend5次上限)
+修复点2: SHADOW-JUNGLE 5页全检查(sloth:纠正mic-btn绑错 / monkey:补MicController+onend死循环 / chameleon:纯跟读无麦)
+自检结果: selfcheck_v91_final.py 35/35 项全部PASS
+v8回归: 海星Fix4/BFCache24页/MicController4核心页/success_nav_wrap 全部无破坏
+HTML数: 25
