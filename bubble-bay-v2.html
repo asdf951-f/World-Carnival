@@ -467,6 +467,8 @@
 /* ====== BFCache 强制刷新处理（v8修复） ====== */
 (function(){
   function forceReinitFromBFCache() {
+    try { if (window.__forceReinitDone) return; window.__forceReinitDone = true; } catch(e){}
+
     try {
       if (document.body) {
         document.body.style.transition = 'none';
@@ -479,9 +481,11 @@
     try {
       if (window.dispatchEvent && typeof Event === 'function') {
         window.dispatchEvent(new Event('resize'));
-        document.dispatchEvent(new Event('DOMContentLoaded'));
+        
       }
     } catch(e) {}
+    try { delete window.__forceReinitDone; } catch(e){}
+    
     try {
       if (window.GestureGuide && typeof window.GestureGuide.clearAll === 'function') window.GestureGuide.clearAll();
     } catch(e) {}
@@ -2049,6 +2053,8 @@ if (synth) {
     flyTo: function(targetEl, callback) {
       this.isFlying = true;
       
+      
+      var self = this;
       var starRect = this.star.getBoundingClientRect();
       var targetRect = targetEl.getBoundingClientRect();
       
